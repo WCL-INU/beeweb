@@ -5,13 +5,13 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    ports:
-      - "3306:3306"
+    # ports:  // 내부 DB로만 사용
+    #   - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: hive_data
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
     restart: always
@@ -24,13 +24,13 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mariadb
-    ports:
-      - "8090:8090"
+    # ports:  // WEB을 통해서만 사용
+    #   - "8090:8090"
     environment:
       DB_HOST: mariadb
-      DB_USER: user
-      DB_PASSWORD: password
-      DB_NAME: hive_data
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
     restart: always
     networks:
       - shared-network
@@ -42,8 +42,8 @@ services:
     depends_on:
       - api
     environment:
-      CHANNEL_ID1: ${CHANNEL_ID1}
-      CHANNEL_ID2: ${CHANNEL_ID2}
+      CHANNEL_ID1: ${THINGSPEAK_CHANNEL_ID1}
+      CHANNEL_ID2: ${THINGSPEAK_CHANNEL_ID2}
     restart: always
     networks:
       - shared-network
@@ -70,5 +70,4 @@ volumes:
   db_data:
 
 networks:
-  shared-network:
-    # external: true
+  shared-network: # 어짜피 프로젝트 명으로 prefix 붙음
