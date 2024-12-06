@@ -1,0 +1,244 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "REST API",
+    "description": ""
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/hello": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/devices/": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "description": "Endpoint to fetch all devices or devices by Hive ID or Device ID",
+        "parameters": [
+          {
+            "name": "hiveId",
+            "description": "Hive ID",
+            "required": false,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "deviceId",
+            "description": "Device ID like ( 13,21,33 or 22 )",
+            "required": false,
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Devices fetched successfully"
+          },
+          "404": {
+            "description": "No devices found"
+          },
+          "500": {
+            "description": "Failed to fetch devices"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "description": "Endpoint to create a new device",
+        "parameters": [
+          {
+            "name": "name",
+            "description": "Device name",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "hive_id",
+            "description": "Hive ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "type_id",
+            "description": "Type ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "example": "any"
+                },
+                "hive_id": {
+                  "example": "any"
+                },
+                "type_id": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device already exists"
+          },
+          "201": {
+            "description": "Device created successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "500": {
+            "description": "Failed to create device"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Devices"
+        ],
+        "description": "Endpoint to update a device",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "description": "Device ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "Device name",
+            "required": false,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "deviceId": {
+                  "example": "any"
+                },
+                "name": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device updated successfully"
+          },
+          "400": {
+            "description": "No fields to update"
+          },
+          "404": {
+            "description": "Updateble Device not found"
+          },
+          "500": {
+            "description": "Failed to update device"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Devices"
+        ],
+        "description": "Endpoint to delete a device",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "description": "Device ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "deviceId": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device deleted successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "404": {
+            "description": "Deletable device not found"
+          },
+          "500": {
+            "description": "Failed to delete device"
+          }
+        }
+      }
+    },
+    "/api/hives/": {
+      "get": {
+        "tags": [
+          "Hive"
+        ],
+        "description": "Endpoint to fetch all hives or hives by Hive ID or Area ID",
+        "parameters": [
+          {
+            "name": "areaId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "hiveId",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hives fetched successfully"
+          },
+          "404": {
+            "description": "No hives found"
+          },
+          "500": {
+            "description": "Failed to fetch hives"
+          }
+        }
+      }
+    }
+  }
+}

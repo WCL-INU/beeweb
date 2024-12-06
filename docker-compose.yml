@@ -5,8 +5,8 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    # ports:  // 내부 DB로만 사용
-    #   - "3306:3306"
+    ports:
+      - "3306:3306" # 로컬에서 접근 가능하게 열어둠
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mariadb
-    # ports:  // WEB을 통해서만 사용
+    # ports:  # 동일 네트워크에서만 사용
     #   - "8090:8090"
     environment:
       DB_HOST: mariadb

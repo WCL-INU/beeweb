@@ -2,6 +2,10 @@ const axios = require('axios');
 
 console.log('Starting the data collector script...');
 
+
+const API_BASE_URL = 'http://api:8090';
+
+
 // Convert ISO 8601 format to MySQL DATETIME format
 function convertToMySQLDateTime(isoDate) {
   return isoDate.replace('T', ' ').substring(0, 19);
@@ -11,7 +15,7 @@ function convertToMySQLDateTime(isoDate) {
 const registerHiveAndDevice = async (hiveId) => {
   try {
     // Register Hive
-    const responseHive = await axios.post('http://172.17.0.1:8090/api/hive', { areaId: 1, name: `Hive ${hiveId}` }, {
+    const responseHive = await axios.post(`${API_BASE_URL}/api/hive`, { areaId: 1, name: `Hive ${hiveId}` }, {
       validateStatus: function (status) {
         return status === 201 || status === 409; // Resolve only if the status code is 201 or 409
       }
@@ -19,7 +23,7 @@ const registerHiveAndDevice = async (hiveId) => {
     const hiveDbId = responseHive.data.hiveId;
 
     // Register Device
-    const responseDevice = await axios.post('http://172.17.0.1:8090/api/device', { name:`Thingspeak`, hiveId: hiveDbId, typeId: 3 }, {
+    const responseDevice = await axios.post(`${API_BASE_URL}/api/device`, { name:`Thingspeak`, hiveId: hiveDbId, typeId: 3 }, {
       validateStatus: function (status) {
         return status === 201 || status === 409; // Resolve only if the status code is 201 or 409
       }
@@ -35,7 +39,7 @@ const registerHiveAndDevice = async (hiveId) => {
 // Send batch data to inout API
 const sendInOutDataBatch = async (batch) => {
   try {
-    await axios.post('http://172.17.0.1:8090/api/upload', {
+    await axios.post(`${API_BASE_URL}/api/upload`, {
       type: 3,
       data: batch
     });

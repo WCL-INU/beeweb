@@ -1,0 +1,26 @@
+{
+  "name": "tsapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.1",
+    "@types/swagger-ui-express": "^4.1.7",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
