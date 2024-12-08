@@ -54,12 +54,11 @@ router.post('/', async (req: Request, res: Response) => {
     // #swagger.tags = ['Devices']
     // #swagger.description = 'Endpoint to create a new device'
     try {
-        // #swagger.parameters['name'] = { description: 'Device name', required: true}
         const name = req.body.name as string;
-        // #swagger.parameters['hive_id'] = { description: 'Hive ID', required: true}
-        const hiveId = req.body.hive_id as number;
-        // #swagger.parameters['type_id'] = { description: 'Type ID', required: true}
-        const typeId = req.body.type_id as number;
+        const hiveId = req.body.hiveId as number;
+        const typeId = req.body.typeId as number;
+
+        // body application/json로 설정하고 필수 필드 있는지 확인
 
         if (!name || !hiveId || !typeId) {
             // #swagger.responses[400] = { description: 'Missing required fields' }
@@ -71,11 +70,11 @@ router.post('/', async (req: Request, res: Response) => {
             // #swagger.responses[200] = { description: 'Device already exists' }
             res.status(200).json({ message: 'Device already exists', deviceId });
             return;
-        } else {
-            // #swagger.responses[201] = { description: 'Device created successfully' }
-            res.status(201).json({ message: 'Device created successfully', deviceId });
-            return;
         }
+
+        // #swagger.responses[201] = { description: 'Device created successfully' }
+        res.status(201).json({ message: 'Device created successfully', deviceId });
+        return;
     } catch (error) {
         console.error('Error creating device:', error);
         // #swagger.responses[500] = { description: 'Failed to create device' }
@@ -87,9 +86,7 @@ router.put('/', async (req: Request, res: Response) => {
     // #swagger.tags = ['Devices']
     // #swagger.description = 'Endpoint to update a device'
     try {
-        // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true}
         const deviceId = req.body.deviceId as number;
-        // #swagger.parameters['name'] = { description: 'Device name', required: false}
         const name = req.body.name as string;
 
         if (deviceId === undefined || deviceId === null) {

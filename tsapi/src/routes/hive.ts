@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { getHiveByHiveId, getHivesByAreaId } from '../db/hive';
-// import { Hive } from '../types';
+import { getHiveByHiveId, getHivesByAreaId, addHive, updateHive } from '../db/hive';
+import { Hive } from '../types';
 
 const router = express.Router();
 router.use(express.json());
@@ -9,8 +9,9 @@ router.get('/', async (req: Request, res: Response) => {
     // #swagger.tags = ['Hive']
     // #swagger.description = 'Endpoint to fetch all hives or hives by Hive ID or Area ID'
     try {
-        // areaId와 hiveId 쿼리 파라미터를 가져옴
+        // #swagger.parameters['areaId'] = { description: 'Area ID', required: false}
         const areaId = req.query.areaId as string;
+        // #swagger.parameters['hiveId'] = { description: 'Hive ID', required: false}
         const hiveId = req.query.hiveId as string;
 
         let hives: any[] = [];
@@ -24,8 +25,6 @@ router.get('/', async (req: Request, res: Response) => {
                 hives.push(...await getHiveByHiveId(parseInt(hiveId)));
             }
         }
-
-
 
         if (hives.length !== 0) {
             // #swagger.responses[200] = { description: 'Hives fetched successfully' }
@@ -44,6 +43,84 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
+router.post('/', async (req: Request, res: Response) => {
+    // #swagger.tags = ['Hive']
+    // #swagger.description = 'Endpoint to create a new hive'
+    try {
+        /*  #swagger.requestBody = {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            $name: "Hive 1",
+                            $areaId: 1
+                        }  
+                    }
+                }
+            } 
+        */
+        const name = req.body.name as string;
+        const areaId = req.body.areaId as number;
+
+
+        if (!name || !areaId) {
+            // #swagger.responses[400] = { description: 'Missing required fields' }
+            res.status(400).json({ error: 'Missing required fields' });
+            return;
+        }
+        const { existing, hiveId } = await addHive(name, areaId);
+        if (existing) {
+            // #swagger.responses[409] = { description: 'Hive already exists' }
+            res.status(409).json({ message: 'Hive already exists', hiveId });
+            return;
+        }
+
+        // #swagger.responses[201] = { description: 'Hive created successfully' }
+        res.status(201).json({ message: 'Hive created successfully', hiveId });
+        return;
+    } catch (error) {
+        console.error('Error creating hive:', error);
+        // #swagger.responses[500] = { description: 'Failed to create hive' }
+        res.status(500).json({ error: 'Failed to create hive' });
+    }
+});
+
+router.put('/', async (req: Request, res: Response) => {
+    // #swagger.tags = ['Hive']
+    // #swagger.description = 'Endpoint to update a hive'
+    try {
+        const hiveId = req.body.hiveId as number;
+        const name = req.body.name as string;
+        const areaId = req.body.areaId as number;
+
+        if (hiveId === undefined || hiveId === null) {
+            // #swagger.responses[400] = { description: 'Missing required fields' }
+            res.status(400).json({ error: 'Missing required fields' });
+            return;
+        }
+
+        if ((name === undefined || name === null) && (areaId === undefined || areaId === null)) {
+            // #swagger.responses[400] = { description: 'No fields to update' }
+            res.status(400).json({ error: 'No fields to update' });
+            return;
+        }
+
+        const { updated } = await updateHive(hiveId, name, areaId);
+        if(updated) {
+            // #swagger.responses[200] = { description: 'Hive updated successfully' }
+            res.status(200).json({ message: 'Hive updated successfully', hiveId });
+            return;
+        }
+
+        // #swagger.responses[404] = { description: 'Updateble Hive not found' }
+        res.status(404).json({ error: 'Updateble Hive not found' });
+        return;
+    } catch (error) {
+        console.error('Error updating hive:', error);
+        // #swagger.responses[500] = { description: 'Failed to update hive' }
+        res.status(500).json({ error: 'Failed to update hive' });
+    }
+});
 
 export default router;
 

@@ -336,72 +336,72 @@ app.delete('/api/area', async (req, res) => {
 // =============================
 // HIVE
 // =============================
-app.get('/api/hive', async (req, res) => {
-  const { areaId, hiveId } = req.query;
+// app.get('/api/hive', async (req, res) => {
+//   const { areaId, hiveId } = req.query;
 
-  // areaId와 hiveId가 모두 없을 때 에러 처리
-  if (!areaId && !hiveId) {
-    return res.status(400).send('Bad Request: Missing areaId or hiveId');
-  }
+//   // areaId와 hiveId가 모두 없을 때 에러 처리
+//   if (!areaId && !hiveId) {
+//     return res.status(400).send('Bad Request: Missing areaId or hiveId');
+//   }
 
-  try {
-    let hives;
+//   try {
+//     let hives;
 
-    // hiveId가 있으면 해당 hiveId로 검색
-    if (hiveId) {
-      hives = await database.getHiveByHiveId(dbConnection, hiveId.split(','));
-    } else {
-      // hiveId가 없으면 areaId로 검색
-      hives = await database.getHivesByAreaId(dbConnection, areaId);
-    }
+//     // hiveId가 있으면 해당 hiveId로 검색
+//     if (hiveId) {
+//       hives = await database.getHiveByHiveId(dbConnection, hiveId.split(','));
+//     } else {
+//       // hiveId가 없으면 areaId로 검색
+//       hives = await database.getHivesByAreaId(dbConnection, areaId);
+//     }
 
-    return res.status(200).json(hives);
-  } catch (error) {
-    console.error('Error fetching hives:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//     return res.status(200).json(hives);
+//   } catch (error) {
+//     console.error('Error fetching hives:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-app.post('/api/hive', async (req, res) => {
-  const { areaId, name } = req.body;
+// app.post('/api/hive', async (req, res) => {
+//   const { areaId, name } = req.body;
 
-  if (!areaId || !name) {
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+//   if (!areaId || !name) {
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    const result = await database.addHive(dbConnection, areaId, name);
-    if(result.existing) {
-      return res.status(409).json({message: 'Hive already exists', hiveId: result.hiveId});
-    } else {
-      return res.status(201).json({message: 'Hive added successfully', hiveId: result.hiveId});
-    }
-  } catch (error) {
-    console.error('Error adding hive:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const result = await database.addHive(dbConnection, areaId, name);
+//     if(result.existing) {
+//       return res.status(409).json({message: 'Hive already exists', hiveId: result.hiveId});
+//     } else {
+//       return res.status(201).json({message: 'Hive added successfully', hiveId: result.hiveId});
+//     }
+//   } catch (error) {
+//     console.error('Error adding hive:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-app.put('/api/hive', async (req, res) => {
-  const { hiveId, areaId, name } = req.body;
+// app.put('/api/hive', async (req, res) => {
+//   const { hiveId, areaId, name } = req.body;
 
-  // hiveId가 없으면 문제
-  if (!hiveId) {
-    return res.status(400).send('Bad Request: Missing hiveId');
-  }
+//   // hiveId가 없으면 문제
+//   if (!hiveId) {
+//     return res.status(400).send('Bad Request: Missing hiveId');
+//   }
 
-  try {
-    const result = await database.updateHive(dbConnection, { hiveId, areaId, name });
-    if(result.updated) {
-      return res.status(200).json({message: 'Hive updated successfully', hiveId: result.hiveId});
-    } else {
-      return res.status(404).json({message: 'Hive not found', hiveId: result.hiveId});
-    }
-  } catch (error) {
-    console.error('Error updating hive:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const result = await database.updateHive(dbConnection, { hiveId, areaId, name });
+//     if(result.updated) {
+//       return res.status(200).json({message: 'Hive updated successfully', hiveId: result.hiveId});
+//     } else {
+//       return res.status(404).json({message: 'Hive not found', hiveId: result.hiveId});
+//     }
+//   } catch (error) {
+//     console.error('Error updating hive:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
 app.delete('/api/hive', async (req, res) => {
   const { hiveId } = req.query;

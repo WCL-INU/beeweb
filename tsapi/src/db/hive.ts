@@ -24,6 +24,77 @@ export const getHivesByAreaId = async (areaId: number): Promise<Hive[]> => {
     }
 }
 
+export const addHive = async (
+    name: string,
+    areaId: number
+): Promise<{ existing: boolean, hiveId: number }> => {
+    try {
+        // Check for existing hive
+        const checkQuery = 'SELECT id FROM hives WHERE area_id = ? AND name = ?';
+        const [checkResults] = await pool.execute(checkQuery, [areaId, name]);
+        
+        const hives_check = checkResults as Hive[];
+        if (hives_check.length > 0) {
+            console.log(`Hive already exists: ${hives_check[0].id} (name: ${name}, area: ${areaId})`);
+            return { existing: true, hiveId: hives_check[0].id };
+        }
+
+        // Insert new hive
+        const insertQuery = 'INSERT INTO hives (area_id, name) VALUES (?, ?)';
+        const [insertResults] = await pool.execute(insertQuery, [areaId, name]);
+        const affectedRows = (insertResults as ResultSetHeader).affectedRows;
+        if (affectedRows != 1) {
+            throw new Error('Failed to insert hive');
+        }
+        const insertId = (insertResults as ResultSetHeader).insertId;
+        console.log(`Inserted hive: ${insertId} (name: ${name}, area: ${areaId})`);
+        return { existing: false, hiveId: insertId };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const updateHive = async (
+    hiveId: number,
+    name?: string,
+    areaId?: number,
+): Promise<{ updated: boolean, hiveId: number }> => {
+    try {
+        // Update hive
+        let updates = [];
+        let params = [];
+
+        if (areaId !== undefined) {
+            updates.push('area_id = ?');
+            params.push(areaId);
+        }
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+
+        if (updates.length === 0) {
+            return { updated: false, hiveId: hiveId };
+        }
+
+        params.push(hiveId);
+
+        const query = `UPDATE hives SET ${updates.join(', ')} WHERE id = ?`;
+        const [updateResults] = await pool.execute(query, params);
+        const affectedRows = (updateResults as ResultSetHeader).affectedRows;
+        if (affectedRows === 0) {
+            console.log(`Hive not found: ${hiveId}`);
+            return { updated: false, hiveId: hiveId };
+        }
+
+        console.log(`Hive ${hiveId} updated successfully: ${updates.join(', ')}, ${params.slice(0, -1).join(', ')}`);
+        return { updated: true, hiveId: hiveId };
+    } catch (error) {
+        throw error;
+    }
+}
+
 
 // import { pool } from './index';
 // import { Device } from '../types';

@@ -62,27 +62,6 @@
         "description": "Endpoint to create a new device",
         "parameters": [
           {
-            "name": "name",
-            "description": "Device name",
-            "required": true,
-            "in": "query",
-            "type": "string"
-          },
-          {
-            "name": "hive_id",
-            "description": "Hive ID",
-            "required": true,
-            "in": "query",
-            "type": "string"
-          },
-          {
-            "name": "type_id",
-            "description": "Type ID",
-            "required": true,
-            "in": "query",
-            "type": "string"
-          },
-          {
             "name": "body",
             "in": "body",
             "schema": {
@@ -91,10 +70,10 @@
                 "name": {
                   "example": "any"
                 },
-                "hive_id": {
+                "hiveId": {
                   "example": "any"
                 },
-                "type_id": {
+                "typeId": {
                   "example": "any"
                 }
               }
@@ -122,20 +101,6 @@
         ],
         "description": "Endpoint to update a device",
         "parameters": [
-          {
-            "name": "deviceId",
-            "description": "Device ID",
-            "required": true,
-            "in": "query",
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "description": "Device name",
-            "required": false,
-            "in": "query",
-            "type": "string"
-          },
           {
             "name": "body",
             "in": "body",
@@ -218,11 +183,15 @@
         "parameters": [
           {
             "name": "areaId",
+            "description": "Area ID",
+            "required": false,
             "in": "query",
             "type": "string"
           },
           {
             "name": "hiveId",
+            "description": "Hive ID",
+            "required": false,
             "in": "query",
             "type": "string"
           }
@@ -236,6 +205,77 @@
           },
           "500": {
             "description": "Failed to fetch hives"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Hive"
+        ],
+        "description": "Endpoint to create a new hive",
+        "responses": {
+          "201": {
+            "description": "Hive created successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "409": {
+            "description": "Hive already exists"
+          },
+          "500": {
+            "description": "Failed to create hive"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$name": "Hive 1",
+                "$areaId": 1
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Hive"
+        ],
+        "description": "Endpoint to update a hive",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "hiveId": {
+                  "example": "any"
+                },
+                "name": {
+                  "example": "any"
+                },
+                "areaId": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hive updated successfully"
+          },
+          "400": {
+            "description": "No fields to update"
+          },
+          "404": {
+            "description": "Updateble Hive not found"
+          },
+          "500": {
+            "description": "Failed to update hive"
           }
         }
       }
