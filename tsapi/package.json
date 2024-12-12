@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "bs": "node swagger.js && tsc && node dist/server.js",
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts"

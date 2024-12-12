@@ -6,13 +6,20 @@ const router = express.Router();
 router.use(express.json());
 
 router.get('/', async (req: Request, res: Response) => {
-    // #swagger.tags = ['Devices']
+    // #swagger.tags = ['Device']
     // #swagger.description = 'Endpoint to fetch all devices or devices by Hive ID or Device ID'
     try {
         // #swagger.parameters['hiveId'] = { description: 'Hive ID', required: false}
         const hiveId = req.query.hiveId as string;
         // #swagger.parameters['deviceId'] = { description: 'Device ID like ( 13,21,33 or 22 )', required: false}
         const deviceId = req.query.deviceId as string;
+
+        // 둘다 없으면
+        if ((hiveId === undefined || hiveId === null) && (deviceId === undefined || deviceId === null)) {
+            // #swagger.responses[400] = { description: 'Missing required fields' }
+            res.status(400).json({ error: 'Missing required fields' });
+            return;
+        }
 
         let devices: Device[] = [];
         if (hiveId != undefined && hiveId != null) {
@@ -26,10 +33,14 @@ router.get('/', async (req: Request, res: Response) => {
             } else {
                 queryDeviceId = [parseInt(deviceId)];
             }
+
+            const queryDevices = await getDeviceByDeviceId(queryDeviceId);
             // 중복되지 않는지 확인하고 추가
-            const index = devices.findIndex((device) => queryDeviceId.includes(device.id));
-            if (index === -1) {
-                devices.push(...await getDeviceByDeviceId(queryDeviceId));
+            for (const device of queryDevices) {
+                const index = devices.findIndex((d) => d.id === device.id);
+                if (index === -1) {
+                    devices.push(device);
+                }
             }
         }
 
@@ -51,9 +62,18 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 router.post('/', async (req: Request, res: Response) => {
-    // #swagger.tags = ['Devices']
+    // #swagger.tags = ['Device']
     // #swagger.description = 'Endpoint to create a new device'
     try {
+        /*  #swagger.parameters['body'] = {
+                in: 'body',
+                required: true,
+                schema: {
+                    name: "Device 1",
+                    hiveId: 1,
+                    typeId: 3
+                }
+        } */
         const name = req.body.name as string;
         const hiveId = req.body.hiveId as number;
         const typeId = req.body.typeId as number;
@@ -83,9 +103,17 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 router.put('/', async (req: Request, res: Response) => {
-    // #swagger.tags = ['Devices']
+    // #swagger.tags = ['Device']
     // #swagger.description = 'Endpoint to update a device'
     try {
+        /*  #swagger.parameters['body'] = {
+                in: 'body',
+                required: true,
+                schema: {
+                    deviceId: 7,
+                    name: "Device 2"
+                }
+        } */
         const deviceId = req.body.deviceId as number;
         const name = req.body.name as string;
 
@@ -119,11 +147,11 @@ router.put('/', async (req: Request, res: Response) => {
 });
 
 router.delete('/', async (req: Request, res: Response) => {
-    // #swagger.tags = ['Devices']
+    // #swagger.tags = ['Device']
     // #swagger.description = 'Endpoint to delete a device'
     try {
         // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true}
-        const deviceId = req.body.deviceId as number;
+        const deviceId = req.query.deviceId as string;
 
         if (deviceId === undefined || deviceId === null) {
             // #swagger.responses[400] = { description: 'Missing required fields' }
@@ -131,7 +159,7 @@ router.delete('/', async (req: Request, res: Response) => {
             return;
         }
 
-        const { deleted } = await deleteDevice(deviceId);
+        const { deleted } = await deleteDevice(parseInt(deviceId));
         if(deleted) {
             // #swagger.responses[200] = { description: 'Device deleted successfully' }
             res.status(200).json({ message: 'Device deleted successfully', deviceId });

@@ -21,10 +21,10 @@
         }
       }
     },
-    "/api/devices/": {
+    "/api/device/": {
       "get": {
         "tags": [
-          "Devices"
+          "Device"
         ],
         "description": "Endpoint to fetch all devices or devices by Hive ID or Device ID",
         "parameters": [
@@ -47,6 +47,9 @@
           "200": {
             "description": "Devices fetched successfully"
           },
+          "400": {
+            "description": "Missing required fields"
+          },
           "404": {
             "description": "No devices found"
           },
@@ -57,24 +60,28 @@
       },
       "post": {
         "tags": [
-          "Devices"
+          "Device"
         ],
         "description": "Endpoint to create a new device",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "name": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Device 1"
                 },
                 "hiveId": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 1
                 },
                 "typeId": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 3
                 }
               }
             }
@@ -97,21 +104,24 @@
       },
       "put": {
         "tags": [
-          "Devices"
+          "Device"
         ],
         "description": "Endpoint to update a device",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "deviceId": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 7
                 },
                 "name": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Device 2"
                 }
               }
             }
@@ -134,7 +144,7 @@
       },
       "delete": {
         "tags": [
-          "Devices"
+          "Device"
         ],
         "description": "Endpoint to delete a device",
         "parameters": [
@@ -144,18 +154,6 @@
             "required": true,
             "in": "query",
             "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "deviceId": {
-                  "example": "any"
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -174,7 +172,7 @@
         }
       }
     },
-    "/api/hives/": {
+    "/api/hive/": {
       "get": {
         "tags": [
           "Hive"
@@ -190,7 +188,7 @@
           },
           {
             "name": "hiveId",
-            "description": "Hive ID",
+            "description": "Hive ID like ( 13,21,33 or 22 )",
             "required": false,
             "in": "query",
             "type": "string"
@@ -199,6 +197,9 @@
         "responses": {
           "200": {
             "description": "Hives fetched successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
           },
           "404": {
             "description": "No hives found"
@@ -213,6 +214,30 @@
           "Hive"
         ],
         "description": "Endpoint to create a new hive",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "Hive 10"
+                },
+                "areaId": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "required": [
+                "name",
+                "areaId"
+              ]
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "Hive created successfully"
@@ -226,17 +251,6 @@
           "500": {
             "description": "Failed to create hive"
           }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$name": "Hive 1",
-                "$areaId": 1
-              }
-            }
-          }
         }
       },
       "put": {
@@ -248,17 +262,21 @@
           {
             "name": "body",
             "in": "body",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "hiveId": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 7
                 },
                 "name": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Hive 20"
                 },
                 "areaId": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 2
                 }
               }
             }
@@ -276,6 +294,63 @@
           },
           "500": {
             "description": "Failed to update hive"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Hive"
+        ],
+        "description": "Endpoint to delete a hive",
+        "parameters": [
+          {
+            "name": "hiveId",
+            "description": "Hive ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hive deleted successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "404": {
+            "description": "Deletable hive not found"
+          },
+          "500": {
+            "description": "Failed to delete hive"
+          }
+        }
+      }
+    },
+    "/api/area/": {
+      "get": {
+        "tags": [
+          "Area"
+        ],
+        "description": "Endpoint to fetch all areas or areas by Area ID",
+        "parameters": [
+          {
+            "name": "areaId",
+            "description": "Area ID like ( 13,21,33 or 22 )",
+            "required": false,
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Areas fetched successfully"
+          },
+          "404": {
+            "description": "No areas found"
+          },
+          "500": {
+            "description": "Failed to fetch areas"
           }
         }
       }

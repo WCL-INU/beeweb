@@ -403,25 +403,25 @@ app.delete('/api/area', async (req, res) => {
 //   }
 // });
 
-app.delete('/api/hive', async (req, res) => {
-  const { hiveId } = req.query;
+// app.delete('/api/hive', async (req, res) => {
+//   const { hiveId } = req.query;
 
-  if (!hiveId) {
-    return res.status(400).send('Bad Request: Missing hiveId');
-  }
+//   if (!hiveId) {
+//     return res.status(400).send('Bad Request: Missing hiveId');
+//   }
 
-  try {
-    const result = await database.deleteHive(dbConnection, hiveId);
-    if(result.deleted) {
-      return res.status(200).json({message: 'Hive deleted successfully', hiveId: result.hiveId});
-    } else {
-      return res.status(404).json({message: 'Hive not found', hiveId: result.hiveId});
-    }
-  } catch (error) {
-    console.error('Error deleting hive:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const result = await database.deleteHive(dbConnection, hiveId);
+//     if(result.deleted) {
+//       return res.status(200).json({message: 'Hive deleted successfully', hiveId: result.hiveId});
+//     } else {
+//       return res.status(404).json({message: 'Hive not found', hiveId: result.hiveId});
+//     }
+//   } catch (error) {
+//     console.error('Error deleting hive:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
 // =============================
 // DEVICE
