@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { getAreaByAreaId, getAreas, addArea } from '../db/area';
+import { getAreaByAreaId, getAreas, addArea, updateArea, deleteArea } from '../db/area';
 import { Area } from '../types';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ router.get('/', async (req: Request, res: Response) => {
     // #swagger.tags = ['Area']
     // #swagger.description = 'Endpoint to fetch all areas or areas by Area ID'
     try {
-        // #swagger.parameters['areaId'] = { description: 'Area ID like ( 13,21,33 or 22 )', required: false}
+        // #swagger.parameters['areaId'] = { description: 'Area ID like ( 13,21,33 or 22 or Undefined)', required: false}
         const areaId = req.query.areaId as string;
 
         // Area ID가 없으면 전체 검색
@@ -46,70 +46,110 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', async (req: Request, res: Response) => {
     // #swagger.tags = ['Area']
-    // #swagger.description = 'Endpoint to add an area'
+    // #swagger.description = 'Endpoint to add a new area'
     try {
         /* #swagger.parameters['body'] = {
-                id: 'body',
-                required: true,
-                scheme:   {
-                    "id": 5,
-                    "area_id": 1,
-                    "name": "Hive 5"
-                }
+            in: 'body',
+            required: true,
+            schema: {
+                $name: '테스트',
+                $location: '37.375, 126.633'
+            }
+        }*/
+        const name = req.body.name as string;
+        const location = req.body.location as string;
+
+        if (!name) {
+            // #swagger.responses[400] = { description: 'Bad Request: Missing required fields' }
+            res.status(400).json({ error: 'Bad Request: Missing required fields' });
+            return;
+        }
+        const { existing, areaId } = await addArea(name, location);
+        if (existing) {
+            // #swagger.responses[409] = { description: 'Area already exists' }
+            res.status(409).json({ message: 'Area already exists', areaId });
+        }
+        // #swagger.responses[201] = { description: 'Area added successfully' }
+        res.status(201).json({ message: 'Area added successfully', areaId });
+        return;
+    } catch (error) {
+        console.error('Error adding area:', error);
+        // #swagger.responses[500] = { description: 'Failed to add area' }
+        res.status(500).json({ error: 'Failed to add area' });
+        return;
     }
-}
-    
+});
+
+router.put('/', async (req: Request, res: Response) => {
+    // #swagger.tags = ['Area']
+    // #swagger.description = 'Endpoint to update an area'
+    try {
+        /* #swagger.parameters['body'] = {
+            in: 'body',
+            required: true,
+            schema: {
+                $areaId: 4,
+                $name: '테스트2',
+                $location: '99.375, 999.633'
+            }
+        }*/
+        const areaId = req.body.areaId as number;
+        const name = req.body.name as string;
+        const location = req.body.location as string;
+
+        if (!areaId) {
+            // #swagger.responses[400] = { description: 'Bad Request: Missing required fields' }
+            res.status(400).json({ error: 'Bad Request: Missing required fields' });
+            return;
+        }
+
+        const updated = await updateArea(areaId, name, location);
+        if (updated) {
+            // #swagger.responses[200] = { description: 'Area updated successfully' }
+            res.status(200).json({ message: 'Area updated successfully', areaId });
+            return;
+        }
+
+        // #swagger.responses[404] = { description: 'Area not found' }
+        res.status(404).json({ error: 'Area not found' });
+        return;
+    } catch (error) {
+        console.error('Error updating area:', error);
+        // #swagger.responses[500] = { description: 'Failed to update area' }
+        res.status(500).json({ error: 'Failed to update area' });
+        return;
+    }
+});
+
+router.delete('/', async (req: Request, res: Response) => {
+    // #swagger.tags = ['Area']
+    // #swagger.description = 'Endpoint to delete an area'
+    try {
+        // #swagger.parameters['areaId'] = { description: 'Area ID', required: true}
+        const areaId = req.query.areaId as string;
+
+        if (areaId === undefined || areaId === null) {
+            // #swagger.responses[400] = { description: 'Bad Request: Missing required fields' }
+            res.status(400).json({ error: 'Bad Request: Missing required fields' });
+            return;
+        }
+
+        const { deleted } = await deleteArea(parseInt(areaId));
+        if (deleted) {
+            // #swagger.responses[200] = { description: 'Area deleted successfully' }
+            res.status(200).json({ message: 'Area deleted successfully', areaId });
+            return;
+        }
+
+        // #swagger.responses[404] = { description: 'Area not found' }
+        res.status(404).json({ error: 'Area not found' });
+        return;
+    } catch (error) {
+        console.error('Error deleting area:', error);
+        // #swagger.responses[500] = { description: 'Failed to delete area' }
+        res.status(500).json({ error: 'Failed to delete area' });
+        return;
+    }
+});
 
 export default router;
-
-
-// export const addHive = async (
-//     name: string,
-//     areaId: number
-// ): Promise<{ existing: boolean, hiveId: number }> => {
-//     try {
-//         // Check for existing hive
-//         const checkQuery = 'SELECT id FROM hives WHERE area_id = ? AND name = ?';
-//         const [checkResults] = await pool.execute(checkQuery, [areaId, name]);
-        
-//         const hives_check = checkResults as Hive[];
-//         if (hives_check.length > 0) {
-//             console.log(`Hive already exists: ${hives_check[0].id} (name: ${name}, area: ${areaId})`);
-//             return { existing: true, hiveId: hives_check[0].id };
-//         }
-
-//         // Insert new hive
-//         const insertQuery = 'INSERT INTO hives (area_id, name) VALUES (?, ?)';
-//         const [insertResults] = await pool.execute(insertQuery, [areaId, name]);
-//         const affectedRows = (insertResults as ResultSetHeader).affectedRows;
-//         if (affectedRows != 1) {
-//             throw new Error('Failed to insert hive');
-//         }
-//         const insertId = (insertResults as ResultSetHeader).insertId;
-//         console.log(`Inserted hive: ${insertId} (name: ${name}, area: ${areaId})`);
-//         return { existing: false, hiveId: insertId };
-//     } catch (error) {
-//         throw error;
-//     }
-// }
-
-
-// app.post('/api/area', async (req, res) => {
-//     const { name, location } = req.body;
-//     if (!name) {
-//       return res.status(400).send('Bad Request: Missing required fields');
-//     }
-  
-//     try {
-//       const result = await database.addArea(dbConnection, name, location);
-//       if(result.existing) {
-//         return res.status(409).json({message: 'Area already exists', areaId: result.areaId});
-//       } else {
-//         return res.status(201).json({message: 'Area added successfully', areaId: result.areaId});
-//       }
-//     } catch (error) {
-//       console.error('Error adding area:', error);
-//       return res.status(500).send('Internal Server Error');
-//     }
-//   });
-  

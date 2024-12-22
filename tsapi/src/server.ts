@@ -4,6 +4,8 @@ import * as swaggerDocument from '../swagger.json';
 import deviceRoutes from './routes/device';
 import hiveRoutes from './routes/hive';
 import areaRoutes from './routes/area';
+import areaHiveRoutes from './routes/legacy';
+import userRoutes from './routes/user';
 
 const app = express();
 const PORT = 3000;
@@ -17,9 +19,11 @@ app.get('/hello', (req: Request, res: Response) => {
 });
 
 // Device routes
+app.use('/api/areahive', areaHiveRoutes);
 app.use('/api/device', deviceRoutes);
 app.use('/api/hive', hiveRoutes);
 app.use('/api/area', areaRoutes);
+app.use('/api/user', userRoutes);
 
 // Start the server
 app.listen(PORT, () => {

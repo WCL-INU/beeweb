@@ -1,9 +1,23 @@
 import express, { Request, Response } from 'express';
-import { getDeviceByDeviceId, getDevicesByHiveId, addDevice, updateDevice, deleteDevice } from '../db/device';
+import { getDeviceByDeviceId, getDevicesByHiveId, addDevice, updateDevice, deleteDevice, getDeviceTypes } from '../db/device';
 import { Device } from '../types';
 
 const router = express.Router();
 router.use(express.json());
+
+router.get('/types', async (req: Request, res: Response) => {
+    // #swagger.tags = ['Device']
+    // #swagger.description = 'Endpoint to fetch all device types'
+    try {
+        const deviceTypes = await getDeviceTypes();
+        // #swagger.responses[200] = { description: 'Device types fetched successfully' }
+        res.status(200).json(deviceTypes);
+    } catch (error) {
+        console.error('Error fetching device types:', error);
+        // #swagger.responses[500] = { description: 'Failed to fetch device types' }
+        res.status(500).json({ error: 'Failed to fetch device types' });
+    }
+});
 
 router.get('/', async (req: Request, res: Response) => {
     // #swagger.tags = ['Device']

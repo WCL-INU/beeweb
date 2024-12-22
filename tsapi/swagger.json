@@ -353,6 +353,128 @@
             "description": "Failed to fetch areas"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Area"
+        ],
+        "description": "Endpoint to add a new area",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "테스트"
+                },
+                "location": {
+                  "type": "string",
+                  "example": "37.375, 126.633"
+                }
+              },
+              "required": [
+                "name",
+                "location"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Area added successfully"
+          },
+          "400": {
+            "description": "Bad Request: Missing required fields"
+          },
+          "409": {
+            "description": "Area already exists"
+          },
+          "500": {
+            "description": "Failed to add area"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Area"
+        ],
+        "description": "Endpoint to update an area",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "areaId": {
+                  "type": "number",
+                  "example": 4
+                },
+                "name": {
+                  "type": "string",
+                  "example": "테스트2"
+                },
+                "location": {
+                  "type": "string",
+                  "example": "99.375, 999.633"
+                }
+              },
+              "required": [
+                "areaId",
+                "name",
+                "location"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Area updated successfully"
+          },
+          "400": {
+            "description": "Bad Request: Missing required fields"
+          },
+          "404": {
+            "description": "Area not found"
+          },
+          "500": {
+            "description": "Failed to update area"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Area"
+        ],
+        "description": "Endpoint to delete an area",
+        "parameters": [
+          {
+            "name": "areaId",
+            "description": "Area ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Area deleted successfully"
+          },
+          "400": {
+            "description": "Bad Request: Missing required fields"
+          },
+          "404": {
+            "description": "Area not found"
+          },
+          "500": {
+            "description": "Failed to delete area"
+          }
+        }
       }
     }
   }

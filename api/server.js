@@ -13,31 +13,31 @@ const dbConnection = database.createDbConnection();
 
 app.use(express.json());
 
-// =============================
-// AREA & HIVE
-// =============================
-app.get('/api/areahive', async (req, res) => {
-  try {
-    const data = await database.getAreasAndHives(dbConnection);
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching areas and hives:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+// // =============================
+// // AREA & HIVE
+// // =============================
+// app.get('/api/areahive', async (req, res) => {
+//   try {
+//     const data = await database.getAreasAndHives(dbConnection);
+//     res.json(data);
+//   } catch (error) {
+//     console.error('Error fetching areas and hives:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-// =============================
-// DEVICE TYPES
-// =============================
-app.get('/api/devicetypes', async (req, res) => {
-  try {
-    const data = await database.getDeviceTypes(dbConnection);
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching device types:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+// // =============================
+// // DEVICE TYPES
+// // =============================
+// app.get('/api/devicetypes', async (req, res) => {
+//   try {
+//     const data = await database.getDeviceTypes(dbConnection);
+//     res.json(data);
+//   } catch (error) {
+//     console.error('Error fetching device types:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
 // =============================
 // INOUT
@@ -257,81 +257,81 @@ app.listen(3000, () => {
 // =============================
 // AREA
 // =============================
-app.get('/api/area', async (req, res) => {
-  const { areaId } = req.query;
-  try {
-    // areaId가 있으면 해당 areaId로 검색
-    if (areaId) {
-      const areas = await database.getAreaByAreaId(dbConnection, areaId.split(','));
-      return res.json(areas);
-    } else { // areaId가 없으면 전체 검색
-      const areas = await database.getAreas(dbConnection);
-      return res.json(areas);
-    }
-  } catch (error) {
-    console.error('Error fetching areas:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+// app.get('/api/area', async (req, res) => {
+//   const { areaId } = req.query;
+//   try {
+//     // areaId가 있으면 해당 areaId로 검색
+//     if (areaId) {
+//       const areas = await database.getAreaByAreaId(dbConnection, areaId.split(','));
+//       return res.json(areas);
+//     } else { // areaId가 없으면 전체 검색
+//       const areas = await database.getAreas(dbConnection);
+//       return res.json(areas);
+//     }
+//   } catch (error) {
+//     console.error('Error fetching areas:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-app.post('/api/area', async (req, res) => {
-  const { name, location } = req.body;
-  if (!name) {
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+// app.post('/api/area', async (req, res) => {
+//   const { name, location } = req.body;
+//   if (!name) {
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    const result = await database.addArea(dbConnection, name, location);
-    if(result.existing) {
-      return res.status(409).json({message: 'Area already exists', areaId: result.areaId});
-    } else {
-      return res.status(201).json({message: 'Area added successfully', areaId: result.areaId});
-    }
-  } catch (error) {
-    console.error('Error adding area:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const result = await database.addArea(dbConnection, name, location);
+//     if(result.existing) {
+//       return res.status(409).json({message: 'Area already exists', areaId: result.areaId});
+//     } else {
+//       return res.status(201).json({message: 'Area added successfully', areaId: result.areaId});
+//     }
+//   } catch (error) {
+//     console.error('Error adding area:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-app.put('/api/area', async (req, res) => {
-  const { areaId, name, location } = req.body;
+// app.put('/api/area', async (req, res) => {
+//   const { areaId, name, location } = req.body;
 
-  if (!areaId) {
-    return res.status(400).send('Bad Request: Missing areaId');
-  }
+//   if (!areaId) {
+//     return res.status(400).send('Bad Request: Missing areaId');
+//   }
 
-  try {
-    const result = await database.updateArea(dbConnection, { areaId, name, location });
-    if(result.updated) {
-      return res.status(200).json({message: 'Area updated successfully', areaId: result.areaId});
-    } else {
-      return res.status(404).json({message: 'Area not found', areaId: result.areaId});
-    }
-  } catch (error) {
-    console.error('Error updating area:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const result = await database.updateArea(dbConnection, { areaId, name, location });
+//     if(result.updated) {
+//       return res.status(200).json({message: 'Area updated successfully', areaId: result.areaId});
+//     } else {
+//       return res.status(404).json({message: 'Area not found', areaId: result.areaId});
+//     }
+//   } catch (error) {
+//     console.error('Error updating area:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-app.delete('/api/area', async (req, res) => {
-  const { areaId } = req.query;
+// app.delete('/api/area', async (req, res) => {
+//   const { areaId } = req.query;
 
-  if (!areaId) {
-    return res.status(400).send('Bad Request: Missing areaId');
-  }
+//   if (!areaId) {
+//     return res.status(400).send('Bad Request: Missing areaId');
+//   }
 
-  try {
-    const result = await database.deleteArea(dbConnection, areaId);
-    if(result.deleted) {
-      return res.status(200).json({message: 'Area deleted successfully', areaId: result.areaId});
-    } else {
-      return res.status(404).json({message: 'Area not found', areaId: result.areaId});
-    }
-  } catch (error) {
-    console.error('Error deleting area:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const result = await database.deleteArea(dbConnection, areaId);
+//     if(result.deleted) {
+//       return res.status(200).json({message: 'Area deleted successfully', areaId: result.areaId});
+//     } else {
+//       return res.status(404).json({message: 'Area not found', areaId: result.areaId});
+//     }
+//   } catch (error) {
+//     console.error('Error deleting area:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
 // =============================
 // HIVE
@@ -509,52 +509,52 @@ app.delete('/api/area', async (req, res) => {
 // });
 
 
-// =============================
-// login
-// =============================
+// // =============================
+// // login
+// // =============================
 
-app.post('/api/login', async (req, res) => {
-  const { id, pw } = req.body;
-  if (!id || !pw) {
-    console.log('Bad Request: Missing required fields');
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+// app.post('/api/login', async (req, res) => {
+//   const { id, pw } = req.body;
+//   if (!id || !pw) {
+//     console.log('Bad Request: Missing required fields');
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    console.log('try login id:', id);
-    // 사용자 정보를 데이터베이스에서 조회
-    const user = await database.getUserById(dbConnection, id);
-    if(user && user.pw === pw) {
-      return res.status(200).json({ success: true, user: { id: user.id, grade: user.grade } });
-    } else {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-  } catch (error) {
-    console.error('Error logging in:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     console.log('try login id:', id);
+//     // 사용자 정보를 데이터베이스에서 조회
+//     const user = await database.getUserById(dbConnection, id);
+//     if(user && user.pw === pw) {
+//       return res.status(200).json({ success: true, user: { id: user.id, grade: user.grade } });
+//     } else {
+//       return res.status(401).json({ success: false, message: 'Invalid credentials' });
+//     }
+//   } catch (error) {
+//     console.error('Error logging in:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-app.get('/api/users/:id', async (req, res) => {
-  const id = req.params.id;
-  if (!id) {
-    console.log('Bad Request: Missing required fields');
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+// app.get('/api/users/:id', async (req, res) => {
+//   const id = req.params.id;
+//   if (!id) {
+//     console.log('Bad Request: Missing required fields');
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    // 사용자 정보를 데이터베이스에서 조회
-    const user = await database.getUserById(dbConnection, id);
-    if (user) {
-      return res.status(200).json({ id: user.id, grade: user.grade });
-    } else {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     // 사용자 정보를 데이터베이스에서 조회
+//     const user = await database.getUserById(dbConnection, id);
+//     if (user) {
+//       return res.status(200).json({ id: user.id, grade: user.grade });
+//     } else {
+//       return res.status(404).json({ success: false, message: 'User not found' });
+//     }
+//   } catch (error) {
+//     console.error('Error fetching user:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
 // 서버 시작
 app.listen(port, () => {

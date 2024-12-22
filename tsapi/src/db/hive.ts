@@ -114,7 +114,7 @@ export const deleteHive = async (hiveId: number): Promise<{ deleted: boolean, hi
             return { deleted: false, hiveId: hiveId };
         }
 
-        console.log(`Deleted hive: ${hiveId}`);
+        console.log(`Hive ${hiveId} deleted successfully`);
         return { deleted: true, hiveId: hiveId };
     } catch (error) {
         throw error;

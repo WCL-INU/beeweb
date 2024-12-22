@@ -1,6 +1,16 @@
 import { pool } from './index';
-import { Device } from '../types';
+import { Device, DeviceType } from '../types';
 import { ResultSetHeader } from 'mysql2';
+
+export const getDeviceTypes = async (): Promise<DeviceType[]> => {
+    try {
+        const query = 'SELECT * FROM device_types';
+        const [rows] = await pool.execute(query);
+        return rows as DeviceType[];
+    } catch (error) {
+        throw error;
+    }
+}
 
 // Fetch a device by ID
 export const getDeviceByDeviceId = async (deiceIdArray: number[]): Promise<Device[]> => {

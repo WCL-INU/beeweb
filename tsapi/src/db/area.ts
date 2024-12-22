@@ -55,6 +55,72 @@ export const addArea = async (
     }
 }
 
+export const updateArea = async (
+    areaId: number,
+    name?: string,
+    location?: string
+): Promise<{updated: boolean, areaId: number}> => {
+    try {
+
+        let updates = [];
+        let params = [];
+
+        if (name !== undefined) {
+            updates.push('name = ?');
+            params.push(name);
+        }
+        if (location !== undefined) {
+            updates.push('location = ?');
+            params.push(location);
+        }
+
+        if (updates.length === 0) {
+            return { updated: false, areaId: areaId };
+        }
+
+        params.push(areaId);
+
+
+        const query = `UPDATE areas SET ${updates.join(', ')} WHERE id = ?`;
+        const [updateResults] = await pool.execute(query, params);
+        const affectedRows = (updateResults as ResultSetHeader).affectedRows;
+        if (affectedRows === 0) {
+            console.log(`Area not found: ${areaId}`);
+            return { updated: false, areaId: areaId };
+        }
+
+        console.log(`Area ${areaId} updated successfully ${updates.join(', ')}, ${params.slice(0, -1).join(', ')}`);
+        return { updated: true, areaId: areaId };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteArea = async (areaId: number): Promise<{deleted: boolean, areaId: number}> => {
+    try {
+        const checkQuery = 'SELECT id FROM areas WHERE id = ?';
+        const [checkResults] = await pool.execute(checkQuery, [areaId]);
+        const areas_check = checkResults as Area[];
+        if (areas_check.length === 0) {
+            console.log(`Area not found: ${areaId}`);
+            return { deleted: false, areaId: areaId };
+        }
+
+        const query = 'DELETE FROM areas WHERE id = ?';
+        const [deleteResults] = await pool.execute(query, [areaId]);
+        const affectedRows = (deleteResults as ResultSetHeader).affectedRows;
+        if (affectedRows === 0) {
+            console.log(`failed to delete area: ${areaId}`);
+            return { deleted: false, areaId: areaId };
+        }
+
+        console.log(`Area ${areaId} deleted successfully`);
+        return { deleted: true, areaId: areaId };
+    } catch (error) {
+        throw error;
+    }
+}
+
 // export const addHive = async (
 //     name: string,
 //     areaId: number
