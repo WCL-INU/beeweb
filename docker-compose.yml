@@ -5,8 +5,10 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    ports:
-      - "3306:3306"
+    # ports:
+    #   - "3306:3306"
+    expose:
+      - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: hive_data
@@ -24,8 +26,10 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mariadb
-    ports:
-      - "8090:8090"
+    # ports:
+    #   - "8090:8090"
+    expose:
+      - "8090"
     environment:
       DB_HOST: mariadb
       DB_USER: user
@@ -57,7 +61,7 @@ services:
     environment:
       SESSION_SECRET: ${SESSION_SECRET}
     ports:
-      - "8081:8081"
+      - "8083:8083"
     volumes:
       - ./web:/usr/src/app   # 로컬 경로를 컨테이너 경로로 마운트
       - /usr/src/app/node_modules   # node_modules는 컨테이너 내부에만 존재하게 함
