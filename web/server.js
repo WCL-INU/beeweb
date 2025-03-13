@@ -6,7 +6,7 @@ const passport = require('passport');
 const loginRouter = require('./loginRoute'); // loginRoute.js 파일을 불러옴
 
 const app = express();
-const port = 8081;
+const port = 8080;
 
 const API_BASE_URL = 'http://api:8090';
 
