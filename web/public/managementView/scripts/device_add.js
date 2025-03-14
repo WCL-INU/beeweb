@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (deviceId) {
             
-            await fetch('/honeybee/api/device', {
+            await fetch('api/device', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ deviceId: deviceId, name: deviceName })
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = `device_list.html?hive_id=${hiveId}`;
         } else {
 
-            await fetch('/honeybee/api/device', {
+            await fetch('api/device', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: deviceName, hiveId: hiveId, typeId: deviceType })
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // HIVE ID로 HIVE 이름 가져오기 (예시 함수)
 async function getHiveNameById(id) {
-    const url = `/honeybee/api/hive?hiveId=${id}`;
+    const url = `api/hive?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
     
@@ -120,7 +120,7 @@ async function getHiveNameById(id) {
 }
 
 async function getDeviceById(id) {
-    const url = `/honeybee/api/device?deviceId=${id}`;
+    const url = `api/device?deviceId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -136,7 +136,7 @@ async function getDeviceById(id) {
 }
 
 async function getDeviceTypes() {
-    const url = '/honeybee/api/devicetypes';
+    const url = 'api/devicetypes';
     const response = await fetch(url);
     const data = await response.json();
 

@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // 서버로부터 로그인 상태 및 사용자 정보를 가져와 설정하는 함수
   function checkLoginStatus() {
     // 서버에서 사용자 정보를 가져오는 API 호출
-    fetch('/honeybee/user-info')
+    fetch('user-info')
       .then(response => response.json())
       .then(data => {
         if (data.userId) {
@@ -33,16 +33,16 @@ document.addEventListener('DOMContentLoaded', function () {
 function showLoginButton() {
   const userInfoDiv = document.querySelector('.user-info');
   userInfoDiv.innerHTML = `
-      <button onclick="window.location.href='/honeybee/login'">Login</button>
+      <button onclick="window.location.href='login'">Login</button>
     `;
 }
 
 // 로그아웃 처리 함수
 function logout() {
-  fetch('/honeybee/logout', { method: 'GET' })
+  fetch('logout', { method: 'GET' })
     .then(() => {
       showLoginButton(); // 로그아웃 후 로그인 버튼 표시
-      window.location.href = '/honeybee/login'; // 로그아웃 후 로그인 페이지로 이동
+      window.location.href = 'login'; // 로그아웃 후 로그인 페이지로 이동
     })
     .catch(error => console.error('Error logging out:', error));
 }

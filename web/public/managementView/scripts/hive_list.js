@@ -55,7 +55,7 @@ function prepareDelete(type, id) {
 }
 
 async function getHivesByAreaId(id) {
-    const response = await fetch(`/honeybee/api/hive?areaId=${id}`);
+    const response = await fetch(`api/hive?areaId=${id}`);
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -76,7 +76,7 @@ async function getHivesByAreaId(id) {
 
 // area ID로 AREA 이름 가져오기
 async function getAreaNameById(id) {
-    const response = await fetch(`/honeybee/api/area?areaId=${id}`);
+    const response = await fetch(`api/area?areaId=${id}`);
     const data = await response.json();
 
     // data가 존재하고 배열이 아닐 경우 처리
@@ -102,7 +102,7 @@ document.addEventListener('modalLoaded', () => {
 
             if (type === 'hive') {
 
-                await fetch(`/honeybee/api/hive?hiveId=${id}`, { method: 'DELETE' })
+                await fetch(`api/hive?hiveId=${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
                         alert('HIVE가 삭제되었습니다.');

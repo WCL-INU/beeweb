@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (hiveId) {
-            await fetch('/honeybee/api/hive', {
+            await fetch('api/hive', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ hiveId: hiveId, name: hiveName, areaId: areaId })
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             return;
         } else {
-            await fetch('/honeybee/api/hive', {
+            await fetch('api/hive', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: hiveName, areaId: areaId })
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // area ID로 AREA 이름 가져오기
 async function getAreaNameById(id) {
-    const response = await fetch(`/honeybee/api/area?areaId=${id}`);
+    const response = await fetch(`api/area?areaId=${id}`);
     const data = await response.json();
 
     // data가 존재하고 배열이 아닐 경우 처리
@@ -120,7 +120,7 @@ async function getAreaNameById(id) {
 }
 
 async function getHiveById(id) {
-    const url = `/honeybee/api/hive?hiveId=${id}`;
+    const url = `api/hive?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -136,7 +136,7 @@ async function getHiveById(id) {
 }
 
 async function getAreas() {
-    const response = await fetch('/honeybee/api/area');
+    const response = await fetch('api/area');
     const data = await response.json();
 
     if (!data || !data.length) {

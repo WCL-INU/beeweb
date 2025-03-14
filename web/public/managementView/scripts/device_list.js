@@ -59,7 +59,7 @@ function prepareDelete(type, id) {
 
 // area ID로 AREA 이름 가져오기
 async function getAreaNameById(id) {
-    const response = await fetch(`/honeybee/api/area?areaId=${id}`);
+    const response = await fetch(`api/area?areaId=${id}`);
     const data = await response.json();
 
     // data가 존재하고 배열이 아닐 경우 처리
@@ -75,7 +75,7 @@ async function getAreaNameById(id) {
 }
 
 async function getDevicesByHiveId(id) {
-    const url = `/honeybee/api/device?hiveId=${id}`;
+    const url = `api/device?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -98,7 +98,7 @@ async function getDevicesByHiveId(id) {
 }
 
 async function getHiveById(id) {
-    const url = `/honeybee/api/hive?hiveId=${id}`;
+    const url = `api/hive?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -124,7 +124,7 @@ document.addEventListener('modalLoaded', () => {
 
             if (type === 'device') {
 
-                await fetch(`/honeybee/api/device?deviceId=${id}`, { method: 'DELETE' })
+                await fetch(`api/device?deviceId=${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
                         alert('DEVICE가 삭제되었습니다.');
@@ -195,7 +195,7 @@ function renderTable(devices) {
 }
 
 async function getDeviceTypes() {
-    const url = '/honeybee/api/devicetypes';
+    const url = 'api/devicetypes';
     const response = await fetch(url);
     const data = await response.json();
 

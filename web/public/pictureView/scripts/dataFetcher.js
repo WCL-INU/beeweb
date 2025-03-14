@@ -6,7 +6,7 @@ async function fetchPictureData() {
         if (!fetcher_device || !fetcher_tRange.sTime || !fetcher_tRange.eTime) {
             return;
         }
-        const url = `/honeybee/api/camera?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
+        const url = `api/camera?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
         const response = await fetch(url);
         let data = await response.json();
 

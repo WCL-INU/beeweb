@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function getAreas() {
-    const response = await fetch('/honeybee/api/area');
+    const response = await fetch('api/area');
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -110,7 +110,7 @@ document.addEventListener('modalLoaded', () => {
             const id = window.deleteId;
 
             if (type === 'area') {
-                await fetch(`/honeybee/api/area?areaId=${id}`, { method: 'DELETE' })
+                await fetch(`api/area?areaId=${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
                         alert('AREA가 삭제되었습니다.');

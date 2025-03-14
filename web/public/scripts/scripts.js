@@ -45,7 +45,7 @@ function updateDropdownForHives(regionId, regionName, hives) {
         button.textContent = hive.name;
         button.onclick = () => {
             // 하이브 선택 시 URL로 리디렉션
-            window.location.href = `/honeybee/view?hiveId=${hive.id}`;
+            window.location.href = `view?hiveId=${hive.id}`;
         };
         areaDropdown.appendChild(button);
     });
@@ -79,7 +79,7 @@ window.onclick = function(event) {
 // 지역 및 하이브 데이터를 가져오는 함수
 async function fetchAreaHiveData() {
     try {
-        const response = await fetch('/honeybee/api/areahive');
+        const response = await fetch('api/areahive');
         let data = await response.json();
 
         // 하이브 이름을 기준으로 정렬하고, 하이브가 없는 지역 제거

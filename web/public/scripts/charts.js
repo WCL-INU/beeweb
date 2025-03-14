@@ -13,7 +13,7 @@ let yMinWeigh = 0, yMaxWeigh = 100;
 let ioChart, thChart, co2Chart, weighChart;
 
 async function fetchInOutData(deviceId, sTime, eTime) {
-  const url = `/honeybee/api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
+  const url = `api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
   const response = await fetch(url);
   const data = await response.json();
   console.log(`Data received for device ${deviceId}:`, data);
@@ -21,7 +21,7 @@ async function fetchInOutData(deviceId, sTime, eTime) {
 }
 
 async function fetchSensorData(deviceId, sTime, eTime) {
-  const url = `/honeybee/api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
+  const url = `api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
   const response = await fetch(url);
   const data = await response.json();
   console.log(`Data received for device ${deviceId}:`, data);
@@ -29,7 +29,7 @@ async function fetchSensorData(deviceId, sTime, eTime) {
 }
 
 async function fetchDevicesByHive(hiveId) {
-  const url = `/honeybee/api/device?hiveId=${hiveId}`;
+  const url = `api/device?hiveId=${hiveId}`;
   const response = await fetch(url);
   const data = await response.json();
   console.log(`Devices received for hive ${hiveId}:`, data);

@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (areaId) {
-            await fetch('/honeybee/api/area', {
+            await fetch('api/area', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ areaId: areaId, name: areaName, location: areaLocation })
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             return;
         } else {
-            await fetch('/honeybee/api/area', {
+            await fetch('api/area', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: areaName, location: areaLocation })
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function getAreaById(areaId) {
-    const response = await fetch(`/honeybee/api/area?areaId=${areaId}`);
+    const response = await fetch(`api/area?areaId=${areaId}`);
     const data = await response.json();
     
     if (!Array.isArray(data) || data.length === 0) {

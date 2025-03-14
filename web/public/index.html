@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>honey bee main</title>
+    <title>Bee Main</title>
+
+    <!-- 맨 앞 슬래시(/) 제거: 로컬(상대) 경로로 -->
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="/honeybee/account/css/header_login.css">
+    <link rel="stylesheet" href="account/css/header_login.css">
 </head>
 
 <body>
@@ -19,25 +21,27 @@
     <!-- Button Container -->
     <div class="container">
         <div class="button-container">
-            <button onclick="location.href='/honeybee/hiveView'">Hive View</button>
-            <button onclick="location.href='/honeybee/compareView'">Compare View</button>
+            <!-- 맨 앞 슬래시(/) 제거: 현재 경로를 기준으로 이동 -->
+            <button onclick="location.href='hiveView'">Hive View</button>
+            <button onclick="location.href='compareView'">Compare View</button>
         </div>
         <div class="button-container">
-            <button onclick="location.href='/honeybee/pictureView'">Picture View</button>
-            <!-- 빈 칸을 차지하는 요소 -->
+            <button onclick="location.href='pictureView'">Picture View</button>
             <div class="empty-button"></div>
         </div>
         <div class="button-container">
-            <button onclick="location.href='/honeybee/exportView'">Export Data</button>
-            <button onclick="location.href='/honeybee/managementView'">Management</button>
+            <button onclick="location.href='exportView'">Export Data</button>
+            <button onclick="location.href='managementView'">Management</button>
         </div>
     </div>
+
     <!-- Footer -->
     <div class="footer">
         <p>Wireless Communication LAB, Dept of Embedded System Engineering, Incheon National University</p>
     </div>
 
-    <script src="/honeybee/scripts/header.js"></script>
+    <!-- 스크립트 경로도 상대 경로로 -->
+    <script src="scripts/header.js"></script>
 </body>
 
 </html>
