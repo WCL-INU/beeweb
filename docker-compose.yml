@@ -39,18 +39,18 @@ services:
     networks:
       - shared-network
 
-  data-collector:
-    build:
-      context: ./data-collector
-      dockerfile: Dockerfile
-    depends_on:
-      - api
-    environment:
-      CHANNEL_ID1: ${CHANNEL_ID1}
-      CHANNEL_ID2: ${CHANNEL_ID2}
-    restart: always
-    networks:
-      - shared-network
+  # data-collector:
+  #   build:
+  #     context: ./data-collector
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - api
+  #   environment:
+  #     CHANNEL_ID1: ${CHANNEL_ID1}
+  #     CHANNEL_ID2: ${CHANNEL_ID2}
+  #   restart: always
+  #   networks:
+  #     - shared-network
 
   web:
     build:
@@ -61,7 +61,7 @@ services:
     environment:
       SESSION_SECRET: ${SESSION_SECRET}
     ports:
-      - "8081:8080"
+      - "8083:8080"
     volumes:
       - ./web:/usr/src/app   # 로컬 경로를 컨테이너 경로로 마운트
       - /usr/src/app/node_modules   # node_modules는 컨테이너 내부에만 존재하게 함
@@ -76,3 +76,5 @@ volumes:
 networks:
   shared-network:
     # external: true
+  beeweb_shared-network:
+      external: true

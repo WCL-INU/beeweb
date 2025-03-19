@@ -1,17 +1,18 @@
-/* public/css/styles.css */
 body {
-    font-family: Arial, sans-serif;
-    background-color: white;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     margin: 0;
-    padding: 0;
+    font-family: Arial, sans-serif;
 }
 
-.header {
+.header,
+.footer {
     background-color: #fcefb4;
-    color: black;
-    text-align: left;
-    padding: 20px;
-    margin: -20px -20px 20px -20px; /* 헤더에만 여백을 없애고 상단 좌우 제거 */
+    color: #372b2b;
+    text-align: center;
+    padding: 10px 0;
+    font-family: Arial, sans-serif;
 }
 
 .navbar {
@@ -28,10 +29,12 @@ body {
 }
 
 .container {
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
-button {
+.container button {
     padding: 10px 15px;
     background-color: rgb(255, 151, 0); /* 기존의 버튼 색상 사용 */
     color: white;
@@ -41,7 +44,7 @@ button {
     font-weight: bold;
 }
 
-button:hover {
+.container button:hover {
     background-color: #e07b00; /* 버튼 호버 색상 조정 */
 }
 

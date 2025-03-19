@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const session = require('express-session');
 const passport = require('passport');
@@ -102,21 +103,18 @@ app.get('/exportView', ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'exportView/exportView.html'));
 });
 
-// management 라우트 추가
-app.get('/managementView', ensureAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'managementView/area_list.html'));
-});
-// app.use('/managementView', managementRouter);
-
 // pictureView 라우트 추가
 app.get('/pictureView', ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pictureView/pictureView.html'));
 });
 
-// Route to serve the index page
-app.get('/', ensureAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// 인증 없이 index.html 제공
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index2.html'));
 });
+
+// management 라우터 추가
+app.use('/managementView', managementRouter(ensureAuthenticated));
 
 // 로그인 라우터 추가
 app.use('/', loginRouter);

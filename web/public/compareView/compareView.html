@@ -30,7 +30,7 @@
             font-family: Arial, sans-serif;
         }
     </style>
-    <link rel="stylesheet" href="account/css/header_login.css">
+    <link rel="stylesheet" href="css/global-layout.css">
     <link rel="stylesheet" href="compareView/css/deviceSelector.css">
     <link rel="stylesheet" href="compareView/css/timeSelector.css">
     <link rel="stylesheet" href="compareView/css/dynamicChart.css">
@@ -44,11 +44,11 @@
 
 <body>
     <!-- Header -->
+    <div id="global-header"></div>
+
     <div class="header">
         <h1>Smart Hive State Viewer</h1>
-        <div class="user-info" style="position: absolute; top: 10px; right: 10px;"></div>
     </div>
-
 
     <!-- chart-view -->
     <div class="container">
@@ -69,18 +69,17 @@
         <button onclick="addChartBlock()">[+]</button>
         <div class="chart-grid"></div>
     </div>
+    
+    <!-- Footer -->
+    <div id="global-footer"></div>
 
+    <script src="scripts/global-layout.js"></script>
     <!-- 순서 중요[배치(동작)의 역순] Chart -> Fetcher -> Time -> Device -->
     <script src="compareView/scripts/dynamicChart.js"></script>
     <script src="compareView/scripts/dataFetcher.js"></script>
     <script src="compareView/scripts/timeSelector.js"></script>
     <script src="compareView/scripts/deviceSelector.js"></script>
-    <script src="scripts/header.js"></script>
 
-    <!-- Footer -->
-    <div class="footer">
-        <p>Wireless Communication LAB, Dept of Embedded System Engineering, Incheon National University</p>
-    </div>
 </body>
 
 </html>
