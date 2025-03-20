@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // HIVE ID로 HIVE 이름 가져오기 (예시 함수)
 async function getHiveNameById(id) {
-    const urll = `${window.BASE_PATH}api/hive?hiveId=${id}`;
+    const url = `${window.BASE_PATH}api/hive?hiveId=${id}`;
     // const url = `api/hive?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
