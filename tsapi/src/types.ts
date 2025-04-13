@@ -29,6 +29,30 @@ export interface User {
     grade: number;
 }
 
+export interface InOutData {
+    id: number;
+    device_id: number;
+    in_field : number;
+    out_field : number;
+    time: string;
+}
+
+export interface SensorData {
+    id: number;
+    device_id: number;
+    temp : number;
+    humi : number;
+    co2 : number;
+    weigh : number;
+    time : string;
+}
+
+export interface CameraData {
+    id: number;
+    device_id: number;
+    picture: string;
+    time: string;
+}
 
 // const getAreasAndHives = (connection) => {
 //     return new Promise((resolve, reject) => {

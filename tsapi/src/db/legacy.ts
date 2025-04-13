@@ -8,7 +8,6 @@ export interface AreaHive {
 }
 
 export const getAreaHives = async (): Promise<AreaHive[]> => {
-
     interface dbAreaHive {
         area_id: number;
         area_name: string;
@@ -55,9 +54,6 @@ export const getAreaHives = async (): Promise<AreaHive[]> => {
         throw error;
     }
 }
-
-
-
 
 // const getAreasAndHives = (connection) => {
 //     return new Promise((resolve, reject) => {

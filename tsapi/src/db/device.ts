@@ -23,6 +23,7 @@ export const getDeviceByDeviceId = async (deiceIdArray: number[]): Promise<Devic
         throw error;
     }
 }
+
 // Fetch devices by hive ID
 export const getDevicesByHiveId = async (hiveId: number): Promise<Device[]> => {
     try {
@@ -126,6 +127,24 @@ export const deleteDevice = async (deviceId: number): Promise<{ deleted: boolean
 
         console.log(`Deleted device: ${deviceId}`);
         return { deleted: true, deviceId: deviceId };
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+// 해당 type의 장치 id가 있는지 확인
+export const checkDevce = async (deviceId: number, typeId: number): Promise<boolean> => {
+    try {
+        const query = 'SELECT id FROM devices WHERE id = ? AND type_id = ?';
+        const [rows] = await pool.execute(query, [deviceId, typeId]);
+        const devices_check = rows as Device[];
+        if (devices_check.length === 0) {
+            console.log(`Device not found: ${deviceId} (type: ${typeId})`);
+            return false;
+        }
+        console.log(`Device found: ${deviceId} (type: ${typeId})`);
+        return true;
     } catch (error) {
         throw error;
     }

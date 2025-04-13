@@ -4,7 +4,7 @@ import { getAreaHives } from '../db/legacy';
 const router = express.Router();
 router.use(express.json());
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/areahive', async (req: Request, res: Response) => {
     // #swagger.tags = ['Legacy']
     // #swagger.description = 'Endpoint to fetch all area hives'
     try {
@@ -17,5 +17,11 @@ router.get('/', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch area hives' });
     }
 });
+
+// router.get('/inout', async (req: Request, res: Response) => {
+//     // #swagger.tags = ['Legacy']
+//     // #swagger.description = 'Endpoint to fetch inout data'
+//     try {
+
 
 export default router;

@@ -18,22 +18,22 @@ services:
     networks:
       - shared-network
 
-  api:
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    depends_on:
-      - mariadb
-    # ports:  # 동일 네트워크에서만 사용
-    #   - "8090:8090"
-    environment:
-      DB_HOST: mariadb
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
-    restart: always
-    networks:
-      - shared-network
+  # api:
+  #   build:
+  #     context: ./api
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - mariadb
+  #   # ports:  # 동일 네트워크에서만 사용
+  #   #   - "8090:8090"
+  #   environment:
+  #     DB_HOST: mariadb
+  #     DB_USER: ${MYSQL_USER}
+  #     DB_PASSWORD: ${MYSQL_PASSWORD}
+  #     DB_NAME: ${MYSQL_DATABASE}
+  #   restart: always
+  #   networks:
+  #     - shared-network
 
   data-collector:
     build:

@@ -39,220 +39,220 @@ app.use(express.json());
 //   }
 // });
 
-// =============================
-// INOUT
-// =============================
-// GET 요청을 처리하여 데이터 반환
-app.get('/api/inout', async (req, res) => {
-  const { deviceId, sTime, eTime } = req.query;
-  if (!deviceId || !sTime || !eTime) {
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+// // =============================
+// // INOUT
+// // =============================
+// // GET 요청을 처리하여 데이터 반환
+// app.get('/api/inout', async (req, res) => {
+//   const { deviceId, sTime, eTime } = req.query;
+//   if (!deviceId || !sTime || !eTime) {
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    const data = await database.getInOutDataByDeviceAndTimeRange(dbConnection, deviceId, sTime, eTime);
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching inout data:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const data = await database.getInOutDataByDeviceAndTimeRange(dbConnection, deviceId, sTime, eTime);
+//     res.json(data);
+//   } catch (error) {
+//     console.error('Error fetching inout data:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-// =============================
-// SENSOR
-// =============================
-// GET 요청을 처리하여 데이터 반환
-app.get('/api/sensor', async (req, res) => {
-  const { deviceId, sTime, eTime } = req.query;
-  if (!deviceId || !sTime || !eTime) {
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+// // =============================
+// // SENSOR
+// // =============================
+// // GET 요청을 처리하여 데이터 반환
+// app.get('/api/sensor', async (req, res) => {
+//   const { deviceId, sTime, eTime } = req.query;
+//   if (!deviceId || !sTime || !eTime) {
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    const data = await database.getSensorDataByDeviceAndTimeRange(dbConnection, deviceId, sTime, eTime);
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching sensor data:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const data = await database.getSensorDataByDeviceAndTimeRange(dbConnection, deviceId, sTime, eTime);
+//     res.json(data);
+//   } catch (error) {
+//     console.error('Error fetching sensor data:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-// =============================
-// CAMERA
-// =============================
-// GET 요청을 처리하여 데이터 반환
-app.get('/api/camera', async (req, res) => {
-  const { deviceId, sTime, eTime } = req.query;
-  if (!deviceId || !sTime || !eTime) {
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+// // =============================
+// // CAMERA
+// // =============================
+// // GET 요청을 처리하여 데이터 반환
+// app.get('/api/camera', async (req, res) => {
+//   const { deviceId, sTime, eTime } = req.query;
+//   if (!deviceId || !sTime || !eTime) {
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    const data = await database.getCameraDataByDeviceAndTimeRange(dbConnection, deviceId, sTime, eTime);
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching camera data:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   try {
+//     const data = await database.getCameraDataByDeviceAndTimeRange(dbConnection, deviceId, sTime, eTime);
+//     res.json(data);
+//   } catch (error) {
+//     console.error('Error fetching camera data:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-// =============================
-// UPLINK & UPLOAD
-// =============================
-const handleInOutData = async (dbConnection, data) => {
-  if (data.some(item => item.inField == null || item.outField == null)) {
-    throw new Error('Bad Request: Missing required fields');
-  }
-  await database.insertInOutData(dbConnection, data);
-};
+// // =============================
+// // UPLINK & UPLOAD
+// // =============================
+// const handleInOutData = async (dbConnection, data) => {
+//   if (data.some(item => item.inField == null || item.outField == null)) {
+//     throw new Error('Bad Request: Missing required fields');
+//   }
+//   await database.insertInOutData(dbConnection, data);
+// };
 
-const handleSensorData = async (dbConnection, data) => {
-  if (data.some(item => item.temp == null && item.humi == null && item.co2 == null && item.weigh == null)) {
-    throw new Error('Bad Request: Missing required fields');
-  }
-  await database.insertSensorData(dbConnection, data);
-};
+// const handleSensorData = async (dbConnection, data) => {
+//   if (data.some(item => item.temp == null && item.humi == null && item.co2 == null && item.weigh == null)) {
+//     throw new Error('Bad Request: Missing required fields');
+//   }
+//   await database.insertSensorData(dbConnection, data);
+// };
 
-const handleCameraData = async (dbConnection, data) => {
-  if (data.some(item => item.picture == null)) {
-    throw new Error('Bad Request: Missing required fields');
-  }
-  await database.insertCameraData(dbConnection, data);
-}
+// const handleCameraData = async (dbConnection, data) => {
+//   if (data.some(item => item.picture == null)) {
+//     throw new Error('Bad Request: Missing required fields');
+//   }
+//   await database.insertCameraData(dbConnection, data);
+// }
 
-app.post('/api/uplink', async (req, res) => {
-  const { id, type } = req.body;
+// app.post('/api/uplink', async (req, res) => {
+//   const { id, type } = req.body;
 
-  if (id == null || type == null) {
-    return res.status(400).send('Bad Request: Missing required fields');
-  }
+//   if (id == null || type == null) {
+//     return res.status(400).send('Bad Request: Missing required fields');
+//   }
 
-  try {
-    // DB에 있는지 확인
-    const deviceResults = await database.checkDevice(dbConnection, id, type);
-    if (deviceResults.length === 0) {
-      return res.status(400).send('Bad Request: Invalid device Id or type');
-    }
+//   try {
+//     // DB에 있는지 확인
+//     const deviceResults = await database.checkDevice(dbConnection, id, type);
+//     if (deviceResults.length === 0) {
+//       return res.status(400).send('Bad Request: Invalid device Id or type');
+//     }
 
-    // IP 업데이트
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    await database.updateDevice(dbConnection, { deviceId: id, modemIp: ip });
+//     // IP 업데이트
+//     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+//     await database.updateDevice(dbConnection, { deviceId: id, modemIp: ip });
 
-    // timestamp를 mysql포맷으로 설정
-    const time = new Date().toISOString().slice(0, 19).replace('T', ' ');
+//     // timestamp를 mysql포맷으로 설정
+//     const time = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-    // type 획득
-    const types = await database.getDeviceTypes(dbConnection);
-    const typeName = types.find(item => item.id === parseInt(type)).name;
-    // 각 Type에 맞게 데이터 삽입
-    if(typeName === 'INOUT') {
-      const {inField, outField } = req.body;
-      if (inField == null || outField == null) {
-        return res.status(400).send('Bad Request: Missing required fields');
-      }
-      await handleInOutData(dbConnection, [{ id, time, inField, outField }]);
-      return res.status(201).send('Data inserted successfully');
-    } else if(typeName === 'SENSOR') {
-      const { temp, humi, co2, weigh } = req.body;
-      if (temp == null && humi == null && co2 == null && weigh == null) {
-        return res.status(400).send('Bad Request: Missing required fields');
-      }
-      await handleSensorData(dbConnection, [{ id, time, temp, humi, co2, weigh }]);
-      return res.status(201).send('Data inserted successfully');
-    } else if(typeName === 'CAMERA') {
-      console.log('CAMERA');
-    } else {
-      return res.status(400).send('Bad Request: Invalid device type');
-    }
+//     // type 획득
+//     const types = await database.getDeviceTypes(dbConnection);
+//     const typeName = types.find(item => item.id === parseInt(type)).name;
+//     // 각 Type에 맞게 데이터 삽입
+//     if(typeName === 'INOUT') {
+//       const {inField, outField } = req.body;
+//       if (inField == null || outField == null) {
+//         return res.status(400).send('Bad Request: Missing required fields');
+//       }
+//       await handleInOutData(dbConnection, [{ id, time, inField, outField }]);
+//       return res.status(201).send('Data inserted successfully');
+//     } else if(typeName === 'SENSOR') {
+//       const { temp, humi, co2, weigh } = req.body;
+//       if (temp == null && humi == null && co2 == null && weigh == null) {
+//         return res.status(400).send('Bad Request: Missing required fields');
+//       }
+//       await handleSensorData(dbConnection, [{ id, time, temp, humi, co2, weigh }]);
+//       return res.status(201).send('Data inserted successfully');
+//     } else if(typeName === 'CAMERA') {
+//       console.log('CAMERA');
+//     } else {
+//       return res.status(400).send('Bad Request: Invalid device type');
+//     }
     
-  } catch (error) {
-    console.error('Error processing uplink:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//   } catch (error) {
+//     console.error('Error processing uplink:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-// POST route to handle uploads
-app.post('/api/upload', upload.any(), async (req, res) => {
-  try {
-    let type;
-    let data = [];
-    if (req.is('multipart/form-data')) {
+// // POST route to handle uploads
+// app.post('/api/upload', upload.any(), async (req, res) => {
+//   try {
+//     let type;
+//     let data = [];
+//     if (req.is('multipart/form-data')) {
 
-      let files = req.files.filter(file => file.fieldname.startsWith('file'));
-      // Handle multipart/form-data
-      type = req.body.type;
+//       let files = req.files.filter(file => file.fieldname.startsWith('file'));
+//       // Handle multipart/form-data
+//       type = req.body.type;
 
-      // Extract metadata from the request
-      const metadata = files.map((file, index) => ({
-        id: req.body[`file${index + 1}_id`],
-        time: req.body[`file${index + 1}_time`],
-        file: file
-      }));
+//       // Extract metadata from the request
+//       const metadata = files.map((file, index) => ({
+//         id: req.body[`file${index + 1}_id`],
+//         time: req.body[`file${index + 1}_time`],
+//         file: file
+//       }));
 
-      if (!type || !files || files.length === 0 || metadata.some(item => !item.id || !item.time)) {
-        console.log(type, files, metadata);
-        return res.status(400).send('Bad Request: Missing required fields or data');
-      }
+//       if (!type || !files || files.length === 0 || metadata.some(item => !item.id || !item.time)) {
+//         console.log(type, files, metadata);
+//         return res.status(400).send('Bad Request: Missing required fields or data');
+//       }
 
-      // Process each file and corresponding data
-      data = metadata.map((item, index) => ({
-        id: item.id,
-        time: item.time,
-        picture: item.file.buffer
-      }));
+//       // Process each file and corresponding data
+//       data = metadata.map((item, index) => ({
+//         id: item.id,
+//         time: item.time,
+//         picture: item.file.buffer
+//       }));
 
-    } else if (req.is('application/json')) {
-      // Handle application/json
-      type = req.body.type;
-      data = req.body.data;
+//     } else if (req.is('application/json')) {
+//       // Handle application/json
+//       type = req.body.type;
+//       data = req.body.data;
 
-      if (!type || !Array.isArray(data) || data.length === 0) {
-        return res.status(400).send('Bad Request: Missing required fields or data');
-      }
-    } else {
-      return res.status(400).send('Bad Request: Unsupported content type');
-    }
+//       if (!type || !Array.isArray(data) || data.length === 0) {
+//         return res.status(400).send('Bad Request: Missing required fields or data');
+//       }
+//     } else {
+//       return res.status(400).send('Bad Request: Unsupported content type');
+//     }
 
-    // timestamp를 mysql포맷으로 변경
-    data.forEach(element => {
-      if (element.time) {
-        element.time = element.time.replace('T', ' ').replace('Z', '');
-      }
-    });
+//     // timestamp를 mysql포맷으로 변경
+//     data.forEach(element => {
+//       if (element.time) {
+//         element.time = element.time.replace('T', ' ').replace('Z', '');
+//       }
+//     });
 
-    // IP 획득
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    // data에서 id가 unique한 element들만 찾아서 id를획득
-    const uniqueIds = [...new Set(data.map(item => item.id))];
-    // IP 업데이트
-    uniqueIds.forEach(async id => {
-      await database.updateDevice(dbConnection, { deviceId: id, modemIp: ip });
-    });
+//     // IP 획득
+//     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+//     // data에서 id가 unique한 element들만 찾아서 id를획득
+//     const uniqueIds = [...new Set(data.map(item => item.id))];
+//     // IP 업데이트
+//     uniqueIds.forEach(async id => {
+//       await database.updateDevice(dbConnection, { deviceId: id, modemIp: ip });
+//     });
 
-    // type 획득
-    const types = await database.getDeviceTypes(dbConnection);
-    const typeName = types.find(item => item.id === parseInt(type)).name;
-    // 각 Type에 맞게 데이터 삽입
-    if(typeName === 'INOUT') {
-      await handleInOutData(dbConnection, data);
-    } else if(typeName === 'SENSOR') {
-      await handleSensorData(dbConnection, data);
-    } else if(typeName === 'CAMERA') {
-      await handleCameraData(dbConnection, data);
-    } else {
-      return res.status(400).send('Bad Request: Invalid device type');
-    }
+//     // type 획득
+//     const types = await database.getDeviceTypes(dbConnection);
+//     const typeName = types.find(item => item.id === parseInt(type)).name;
+//     // 각 Type에 맞게 데이터 삽입
+//     if(typeName === 'INOUT') {
+//       await handleInOutData(dbConnection, data);
+//     } else if(typeName === 'SENSOR') {
+//       await handleSensorData(dbConnection, data);
+//     } else if(typeName === 'CAMERA') {
+//       await handleCameraData(dbConnection, data);
+//     } else {
+//       return res.status(400).send('Bad Request: Invalid device type');
+//     }
 
-    return res.status(201).send('Data inserted successfully');
-  } catch (error) {
-    console.error('Error processing upload:', error);
-    return res.status(500).send('Internal Server Error');
-  }
-});
+//     return res.status(201).send('Data inserted successfully');
+//   } catch (error) {
+//     console.error('Error processing upload:', error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// });
 
-app.listen(3000, () => {
-  console.log('Backend server is running on port 3000');
-});
+// app.listen(3000, () => {
+//   console.log('Backend server is running on port 3000');
+// });
 
 // =============================
 // AREA
