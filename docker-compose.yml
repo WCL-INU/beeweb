@@ -5,20 +5,18 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    # ports:
+    # ports:  // 내부 DB로만 사용
     #   - "3306:3306"
     expose:
       - "3306"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: hive_data
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
     restart: always
-    networks:
-      - shared-network
 
   api:
     build:
@@ -26,18 +24,14 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mariadb
-    # ports:
+    # ports:  // WEB을 통해서만 사용
     #   - "8090:8090"
-    expose:
-      - "8090"
     environment:
       DB_HOST: mariadb
-      DB_USER: user
-      DB_PASSWORD: password
-      DB_NAME: hive_data
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
     restart: always
-    networks:
-      - shared-network
 
   # data-collector:
   #   build:
@@ -46,11 +40,9 @@ services:
   #   depends_on:
   #     - api
   #   environment:
-  #     CHANNEL_ID1: ${CHANNEL_ID1}
-  #     CHANNEL_ID2: ${CHANNEL_ID2}
+  #     CHANNEL_ID1: ${THINGSPEAK_CHANNEL_ID1}
+  #     CHANNEL_ID2: ${THINGSPEAK_CHANNEL_ID2}
   #   restart: always
-  #   networks:
-  #     - shared-network
 
   web:
     build:
@@ -61,20 +53,11 @@ services:
     environment:
       SESSION_SECRET: ${SESSION_SECRET}
     ports:
-      - "8083:8080"
+      - "8081:8080"
     volumes:
       - ./web:/usr/src/app   # 로컬 경로를 컨테이너 경로로 마운트
       - /usr/src/app/node_modules   # node_modules는 컨테이너 내부에만 존재하게 함
     restart: always
-    networks:
-      - shared-network
-
 
 volumes:
   db_data:
-
-networks:
-  shared-network:
-    # external: true
-  beeweb_shared-network:
-      external: true
