@@ -9,7 +9,7 @@ FROM mariadb:11.4
 # ENV MYSQL_PASSWORD=password
 
 # 초기화 스크립트를 Docker entrypoint 디렉토리에 복사
-COPY init.sql /docker-entrypoint-initdb.d/
+# COPY init.sql /docker-entrypoint-initdb.d/
 
 # 커스텀 MariaDB 구성 파일 복사
 COPY custom-mariadb.cnf /etc/mysql/conf.d/

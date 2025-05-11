@@ -21,7 +21,222 @@
         }
       }
     },
-    "/api/device/": {
+    "/areahive": {
+      "get": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Endpoint to fetch all area hives",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/inout": {
+      "get": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Fetch inout data in legacy format (from sensor_data2)",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "description": "Device ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "sTime",
+            "description": "Start time (YYYY-MM-DD HH:mm:ss)",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "eTime",
+            "description": "End time (YYYY-MM-DD HH:mm:ss)",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Login forwarding to user route",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/devicetypes": {
+      "get": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Fetch device types",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/sensor": {
+      "get": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Fetch sensor data in legacy format (from sensor_data2)",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "description": "Device ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "sTime",
+            "description": "Start time (YYYY-MM-DD HH:mm:ss)",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "eTime",
+            "description": "End time (YYYY-MM-DD HH:mm:ss)",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/camera": {
+      "get": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Forward camera requests to data route",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/uplink": {
+      "post": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Uplink adapter for legacy to sensor2 format",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "tags": [
+          "Legacy"
+        ],
+        "description": "Upload adapter for legacy format to sensor2 format",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "example": "any"
+                },
+                "data": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/device/types": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint to fetch all device types",
+        "responses": {
+          "200": {
+            "description": "Device types fetched successfully"
+          },
+          "500": {
+            "description": "Failed to fetch device types"
+          }
+        }
+      }
+    },
+    "/device/": {
       "get": {
         "tags": [
           "Device"
@@ -172,7 +387,7 @@
         }
       }
     },
-    "/api/hive/": {
+    "/hive/": {
       "get": {
         "tags": [
           "Hive"
@@ -327,7 +542,7 @@
         }
       }
     },
-    "/api/area/": {
+    "/area/": {
       "get": {
         "tags": [
           "Area"
@@ -336,7 +551,7 @@
         "parameters": [
           {
             "name": "areaId",
-            "description": "Area ID like ( 13,21,33 or 22 )",
+            "description": "Area ID like ( 13,21,33 or 22 or Undefined)",
             "required": false,
             "in": "query",
             "type": "string"
@@ -473,6 +688,252 @@
           },
           "500": {
             "description": "Failed to delete area"
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint to login a user",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "user1"
+                },
+                "pw": {
+                  "type": "string",
+                  "example": "password"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User logged in successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/user/{id}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint to fetch a user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User fetched successfully"
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/data/sensor2": {
+      "get": {
+        "tags": [
+          "Sensor2"
+        ],
+        "description": "Fetch sensor or inout data by type and time range",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "description": "Device ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "sTime",
+            "description": "Start time (YYYY-MM-DD HH:mm:ss)",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "eTime",
+            "description": "End time (YYYY-MM-DD HH:mm:ss)",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "dataTypes",
+            "description": "Comma-separated data types (e.g. 2,3,4)",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/data/uplink": {
+      "post": {
+        "tags": [
+          "Sensor2"
+        ],
+        "description": "Upload a single data record from device",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "values": {
+                  "type": "object",
+                  "properties": {
+                    "co2": {
+                      "type": "number",
+                      "example": 450
+                    },
+                    "out_field": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  },
+                  "required": [
+                    "co2",
+                    "out_field"
+                  ]
+                }
+              },
+              "required": [
+                "id"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/data/upload": {
+      "post": {
+        "tags": [
+          "Sensor2"
+        ],
+        "description": "Upload a batch of sensor/inout data with timestamps",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "device_id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "time": {
+                        "type": "string",
+                        "example": "2025-05-11 13:30:00"
+                      },
+                      "values": {
+                        "type": "object",
+                        "properties": {
+                          "temp": {
+                            "type": "number",
+                            "example": 25.5
+                          },
+                          "humi": {
+                            "type": "number",
+                            "example": 60
+                          }
+                        },
+                        "required": [
+                          "temp",
+                          "humi"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "device_id"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }

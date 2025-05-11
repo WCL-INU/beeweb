@@ -25,6 +25,8 @@ services:
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
+    ports:
+      - "8090:8090"
     restart: always
 
   # data-collector:

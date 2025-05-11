@@ -7,9 +7,19 @@ import areaRoutes from './routes/area';
 import legacyRoutes from './routes/legacy';
 import userRoutes from './routes/user';
 import dataRoutes from './routes/data';
+import { initializeDatabase } from './db/initialize';
 
 const app = express();
 const PORT = 8090;
+
+initializeDatabase()
+  .then(() => {
+    console.log('Database initialized successfully');
+  })
+  .catch((error) => {
+    console.error('Error initializing database:', error);
+  }
+);
 
 // Swagger setup
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
