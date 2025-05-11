@@ -2,68 +2,96 @@ let fetcher_deviceList = [];
 let fetcher_tRange = {sTime: null, eTime: null};
 let fetcher_dataList = [];
 
-async function fetchInOutData(deviceId, sTime, eTime) {
-    const url = `${window.BASE_PATH}api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
+// async function fetchInOutData(deviceId, sTime, eTime) {
+//     const url = `${window.BASE_PATH}api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
+//     const response = await fetch(url);
+
+//     if (!response.ok) {
+//         console.warn(`No InOut data for device ${deviceId} (status: ${response.status})`);
+//         return [];  // 데이터 없음 처리
+//     }
+
+//     const data = await response.json();
+//     console.log(`Data received for device ${deviceId}:`, data);
+//     return data;
+// }
+
+// async function fetchSensorData(deviceId, sTime, eTime) {
+//     const url = `${window.BASE_PATH}api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
+//     const response = await fetch(url);
+
+//     if (!response.ok) {
+//         console.warn(`No Sensor data for device ${deviceId} (status: ${response.status})`);
+//         return [];  // 데이터 없음 처리
+//     }
+
+//     const data = await response.json();
+//     console.log(`Data received for device ${deviceId}:`, data);
+//     return data;
+// }
+
+async function fetchSensor2Data(deviceId, sTime, eTime, dataTypes) {
+    const typeStr = dataTypes.join(',');
+    const url = `${window.BASE_PATH}api/data/sensor2?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}&dataTypes=${typeStr}`;
     const response = await fetch(url);
 
     if (!response.ok) {
-        console.warn(`No InOut data for device ${deviceId} (status: ${response.status})`);
-        return [];  // 데이터 없음 처리
+        console.warn(`No data for device ${deviceId} (status: ${response.status})`);
+        return [];
     }
 
     const data = await response.json();
-    console.log(`Data received for device ${deviceId}:`, data);
-    return data;
-}
-
-async function fetchSensorData(deviceId, sTime, eTime) {
-    const url = `${window.BASE_PATH}api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-        console.warn(`No Sensor data for device ${deviceId} (status: ${response.status})`);
-        return [];  // 데이터 없음 처리
-    }
-
-    const data = await response.json();
-    console.log(`Data received for device ${deviceId}:`, data);
+    console.log(`[DataFetcher] ${data.length} data points received for device ${deviceId} (${sTime} ~ ${eTime})`, data);
     return data;
 }
 
 async function fetchDataList() {
     fetcher_dataList = [];
     let i = 0;
-    for(const device of fetcher_deviceList) {
-        let data;
-        if(device.type_id == 2) {
-            data = await fetchSensorData(device.id, fetcher_tRange.sTime, fetcher_tRange.eTime);
 
-            // map 함수를 이용하여 data를 각각 'Temp', 'Humi', 'CO2', 'Weight'로 파싱하고 각 값과 시간을 분리하여 배열에 추가
-            const tempData = data.map(d => ({id:d.id, value: d.temp, time: d.time}));
-            const humiData = data.map(d => ({id:d.id, value: d.humi, time: d.time}));
-            const co2Data = data.map(d => ({id:d.id, value: d.co2, time: d.time}));
-            const weightData = data.map(d => ({id:d.id, value: d.weigh, time: d.time}));
-            
-            const tempDevice = {id: i++, type: 'Temp', hive_name: device.hive_name, name: device.name};
-            const humiDevice = {id: i++, type: 'Humi', hive_name: device.hive_name, name: device.name};
-            const co2Device = {id: i++, type: 'CO2', hive_name: device.hive_name, name: device.name};
-            const weightDevice = {id: i++, type: 'Weight', hive_name: device.hive_name, name: device.name};
+    for (const device of fetcher_deviceList) {
+        let dataTypes = [];
+        let typeMap = {}; // data_type -> label
 
-            fetcher_dataList.push({device: tempDevice, data: tempData});
-            fetcher_dataList.push({device: humiDevice, data: humiData});
-            fetcher_dataList.push({device: co2Device, data: co2Data});
-            fetcher_dataList.push({device: weightDevice, data: weightData});
-        } else if(device.type_id == 3) {
-            data = await fetchInOutData(device.id, fetcher_tRange.sTime, fetcher_tRange.eTime);
+        if (device.type_id == 2) {
+            dataTypes = [4, 5, 6, 7];  // TEMP, HUMI, CO2, WEIGH
+            typeMap = {
+                4: 'Temp',
+                5: 'Humi',
+                6: 'CO2',
+                7: 'Weight'
+            };
+        } else if (device.type_id == 3) {
+            dataTypes = [2, 3];  // IN, OUT
+            typeMap = {
+                2: 'In',
+                3: 'Out'
+            };
+        } else {
+            continue;
+        }
 
-            const inData = data.map(d => ({id:d.id, value: d.in_field, time: d.time}));
-            const outData = data.map(d => ({id:d.id, value: d.out_field, time: d.time}));
+        const data = await fetchSensor2Data(device.id, fetcher_tRange.sTime, fetcher_tRange.eTime, dataTypes);
 
-            const inDevice = {id: i++, type: 'In', hive_name: device.hive_name, name: device.name};
-            const outDevice = {id: i++, type: 'Out', hive_name: device.hive_name, name: device.name};
+        for (const typeId of dataTypes) {
+            const label = typeMap[typeId];
 
-            fetcher_dataList.push({device: inDevice, data: inData});
-            fetcher_dataList.push({device: outDevice, data: outData});
+            const parsed = data
+                .filter(d => d.data_type === typeId)
+                .map(d => ({
+                    id: d.id,
+                    value: d.value,
+                    time: d.time
+                }));
+
+            const deviceMeta = {
+                id: i++,
+                type: label,
+                hive_name: device.hive_name,
+                name: device.name
+            };
+
+            fetcher_dataList.push({ device: deviceMeta, data: parsed });
         }
     }
 
@@ -139,9 +167,18 @@ function convertISOStringToLocalString(isoString) {
 }
 
 function getLatestData(dataList, type) {
-    const data = dataList.filter(d => d.device.type == type);
-    const firstDevice = data[0];
-    return firstDevice ? firstDevice.data[0] : null;
+    const filtered = dataList.filter(d => d.device.type === type);
+
+    let latest = null;
+
+    for (const item of filtered) {
+        const latestEntry = item.data[0]; // 시간 내림차순으로 정렬되어 있다고 가정
+        if (!latest || new Date(latestEntry.time) > new Date(latest.time)) {
+            latest = latestEntry;
+        }
+    }
+
+    return latest;
 }
 
 function updateInfo(selector, data) {

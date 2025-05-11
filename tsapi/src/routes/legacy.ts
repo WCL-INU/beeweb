@@ -25,8 +25,9 @@ router.get('/inout', async (req: Request, res: Response) => {
     // #swagger.tags = ['Legacy']
     // #swagger.description = 'Fetch inout data in legacy format (from sensor_data2)'
     // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true }
-    // #swagger.parameters['sTime'] = { description: 'Start time (YYYY-MM-DD HH:mm:ss)', required: true }
-    // #swagger.parameters['eTime'] = { description: 'End time (YYYY-MM-DD HH:mm:ss)', required: true }
+    // #swagger.parameters['sTime'] = { description: 'Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)', required: true }
+    // #swagger.parameters['eTime'] = { description: 'End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)', required: true }
+
     try {
         const deviceId = parseInt(req.query.deviceId as string);
         const sTime = req.query.sTime as string;
@@ -37,14 +38,21 @@ router.get('/inout', async (req: Request, res: Response) => {
             return;
         }
 
+        // Fetch rows with data_type 2 (IN) and 3 (OUT)
         const rows = await getSensorData2(deviceId, sTime, eTime, [2, 3]);
 
         const map = new Map<string, { device_id: number; time: string; in_field?: number; out_field?: number }>();
+
         for (const row of rows) {
             const key = `${row.device_id}-${row.time}`;
             const existing = map.get(key) ?? { device_id: row.device_id, time: row.time };
-            if ('in_field' in row) existing.in_field = row.in_field;
-            if ('out_field' in row) existing.out_field = row.out_field;
+
+            if (row.data_type === 2) {
+                existing.in_field = Number(row.data_int ?? row.data_float ?? 0);
+            } else if (row.data_type === 3) {
+                existing.out_field = Number(row.data_int ?? row.data_float ?? 0);
+            }
+
             map.set(key, existing);
         }
 
@@ -62,6 +70,7 @@ router.get('/inout', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch inout data' });
     }
 });
+
 
 router.post('/login', (req: Request, res: Response, next: NextFunction) => {
     // #swagger.tags = ['Legacy']
@@ -81,8 +90,9 @@ router.get('/sensor', async (req: Request, res: Response) => {
     // #swagger.tags = ['Legacy']
     // #swagger.description = 'Fetch sensor data in legacy format (from sensor_data2)'
     // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true }
-    // #swagger.parameters['sTime'] = { description: 'Start time (YYYY-MM-DD HH:mm:ss)', required: true }
-    // #swagger.parameters['eTime'] = { description: 'End time (YYYY-MM-DD HH:mm:ss)', required: true }
+    // #swagger.parameters['sTime'] = { description: 'Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)', required: true }
+    // #swagger.parameters['eTime'] = { description: 'End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)', required: true }
+
     try {
         const deviceId = parseInt(req.query.deviceId as string);
         const sTime = req.query.sTime as string;
@@ -94,17 +104,28 @@ router.get('/sensor', async (req: Request, res: Response) => {
         }
 
         const rows = await getSensorData2(deviceId, sTime, eTime, [4, 5, 6, 7]);
-        console.log(rows);
 
-        const map = new Map<string, { device_id: number; time: string; temp?: number; humi?: number; co2?: number; weigh?: number }>();
+        const map = new Map<string, {
+            device_id: number;
+            time: string;
+            temp?: number;
+            humi?: number;
+            co2?: number;
+            weigh?: number;
+        }>();
 
         for (const row of rows) {
             const key = `${row.device_id}-${row.time}`;
             const existing = map.get(key) ?? { device_id: row.device_id, time: row.time };
-            if ('temp' in row) existing.temp = row.temp;
-            if ('humi' in row) existing.humi = row.humi;
-            if ('co2' in row) existing.co2 = row.co2;
-            if ('weigh' in row) existing.weigh = row.weigh;
+            const value = Number(row.data_int ?? row.data_float ?? 0);
+
+            switch (row.data_type) {
+                case 4: existing.temp = value; break;
+                case 5: existing.humi = value; break;
+                case 6: existing.co2 = value; break;
+                case 7: existing.weigh = value; break;
+            }
+
             map.set(key, existing);
         }
 
@@ -115,7 +136,7 @@ router.get('/sensor', async (req: Request, res: Response) => {
             humi: entry.humi ?? 0,
             co2: entry.co2 ?? 0,
             weigh: entry.weigh ?? 0,
-            time: entry.time,
+            time: entry.time
         }));
 
         res.status(200).json(result);
@@ -187,6 +208,7 @@ router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
 
         if (!Array.isArray(data) || data.length === 0) {
             console.error('Invalid or missing data array');
+            console.log(req.body);
             return;
         }
 

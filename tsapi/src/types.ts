@@ -47,13 +47,26 @@ export interface SensorData {
     time : string;
 }
 
-export interface SensorData2 {
+// 1. 기본 DB 레코드 구조 (SELECT * FROM sensor_data2)
+export interface SensorData2Row {
     id: number;
     device_id: number;
-    data_int: number | null;      // IN, OUT과 같이 정수형 데이터
-    data_float: number | null;    // TEMP, HUMI 등 실수형 데이터
-    data_type: number;            // 1~7: PICUTRE 제외 모든 타입을 의미
+    data_int: number | null;
+    data_float: number | null;
+    data_type: number;
     time: string;
+}
+
+// 2. INSERT용 구조 (id 없음)
+export type SensorData2Insert = Omit<SensorData2Row, 'id'>;
+
+// 3. API 응답용 구조 (int/float 대신 value 단일 필드 사용)
+export interface SensorData2Value {
+    id: number;
+    device_id: number;
+    data_type: number;
+    time: string;
+    value: number;
 }
 
 export const DATA_TYPE = {
