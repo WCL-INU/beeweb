@@ -106,7 +106,7 @@ function saveSelectedHives() {
 
 // 실제 API 호출을 통해 HIVE 데이터를 가져오는 함수
 async function getAreas() {
-    const response = await fetch('/honeybee/api/areahive');
+    const response = await fetch('api/areahive');
     const data = await response.json();
 
     if (!data || !data.length) {

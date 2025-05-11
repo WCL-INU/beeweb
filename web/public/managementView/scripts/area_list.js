@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function getAreas() {
-    const response = await fetch('/honeybee/api/area');
+    const response = await fetch(`${window.BASE_PATH}api/area`);
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -65,7 +65,7 @@ function renderTable(areas) {
         // 지역 이름 (링크)
         const nameCell = document.createElement('td');
         const link = document.createElement('a');
-        link.href = `hive_list.html?area_id=${area.id}`;
+        link.href = `${window.BASE_PATH}managementView/hive_list?area_id=${area.id}`;
         link.textContent = area.name;
         nameCell.appendChild(link);
         row.appendChild(nameCell);
@@ -82,7 +82,7 @@ function renderTable(areas) {
         const editButton = document.createElement('button');
         editButton.textContent = '수정';
         editButton.onclick = () => {
-            window.location.href = `area_add.html?area_id=${area.id}`;
+            window.location.href = `${window.BASE_PATH}managementView/area_add?area_id=${area.id}`;
         };
         actionsCell.appendChild(editButton);
         
@@ -110,7 +110,7 @@ document.addEventListener('modalLoaded', () => {
             const id = window.deleteId;
 
             if (type === 'area') {
-                await fetch(`/honeybee/api/area?areaId=${id}`, { method: 'DELETE' })
+                await fetch(`${window.BASE_PATH}api/area?areaId=${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
                         alert('AREA가 삭제되었습니다.');

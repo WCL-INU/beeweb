@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('deviceType').value = device.type_id;
         } else {
             alert('존재하지 않는 DEVICE입니다.');
-            window.location.href = `device_list.html?hive_id=${hiveId}`;
+            window.location.href = `${window.BASE_PATH}managementView/device_list?hive_id=${hiveId}`;
+            // window.location.href = `device_list.html?hive_id=${hiveId}`;
         }
     } else {
         title.textContent = `(${hive_name}) : DEVICE 추가`;
@@ -55,8 +56,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (deviceId) {
-            
-            await fetch('/honeybee/api/device', {
+            await fetch(`${window.BASE_PATH}api/device`, {
+            // await fetch('api/device', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ deviceId: deviceId, name: deviceName })
@@ -65,7 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .then(data => {
                     if (data.message === 'Device updated successfully') {
                         alert('DEVICE가 수정되었습니다.');
-                        window.location.href = `device_list.html?hive_id=${hiveId}`;
+                        window.location.href = `${window.BASE_PATH}managementView/device_list?hive_id=${hiveId}`;
+                        // window.location.href = `device_list.html?hive_id=${hiveId}`;
                     } else if (data.message === 'Device not found') {
                         alert('존재하지 않는 DEVICE입니다.');
                     }
@@ -74,10 +76,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('Error updating DEVICE:', error);
                     alert('DEVICE 수정에 실패했습니다.');
                 });
-            window.location.href = `device_list.html?hive_id=${hiveId}`;
+            window.location.href = `${window.BASE_PATH}managementView/device_list?hive_id=${hiveId}`;
+            // window.location.href = `device_list.html?hive_id=${hiveId}`;
         } else {
-
-            await fetch('/honeybee/api/device', {
+            await fetch(`${window.BASE_PATH}api/device`, {
+            // await fetch('api/device', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: deviceName, hiveId: hiveId, typeId: deviceType })
@@ -86,7 +89,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .then(data => {
                     if (data.message === 'Device added successfully') {
                         alert('DEVICE가 추가되었습니다.');
-                        window.location.href = `device_list.html?hive_id=${hiveId}`;
+                        window.location.href = `${window.BASE_PATH}managementView/device_list?hive_id=${hiveId}`;
+                        // window.location.href = `device_list.html?hive_id=${hiveId}`;
                     } else if (data.message === 'Device already exists') {
                         alert('이미 존재하는 DEVICE입니다.');
                     }
@@ -95,15 +99,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('Error adding DEVICE:', error);
                     alert('DEVICE 추가에 실패했습니다.');
                 });
-
-            window.location.href = `device_list.html?hive_id=${hiveId}`;
+            window.location.href = `${window.BASE_PATH}managementView/device_list?hive_id=${hiveId}`;
+            // window.location.href = `device_list.html?hive_id=${hiveId}`;
         }
     });
 });
 
 // HIVE ID로 HIVE 이름 가져오기 (예시 함수)
 async function getHiveNameById(id) {
-    const url = `/honeybee/api/hive?hiveId=${id}`;
+    const url = `${window.BASE_PATH}api/hive?hiveId=${id}`;
+    // const url = `api/hive?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
     
@@ -120,7 +125,8 @@ async function getHiveNameById(id) {
 }
 
 async function getDeviceById(id) {
-    const url = `/honeybee/api/device?deviceId=${id}`;
+    const url = `${window.BASE_PATH}api/device?deviceId=${id}`;
+    // const url = `api/device?deviceId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -136,7 +142,8 @@ async function getDeviceById(id) {
 }
 
 async function getDeviceTypes() {
-    const url = '/honeybee/api/devicetypes';
+    const url = `${window.BASE_PATH}api/devicetypes`;
+    // const url = 'api/devicetypes';
     const response = await fetch(url);
     const data = await response.json();
 

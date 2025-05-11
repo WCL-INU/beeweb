@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Picture View</title>
-    <link rel="stylesheet" href="css/timeSelector.css">
-    <link rel="stylesheet" href="css/deviceSelector.css">
-    <link rel="stylesheet" href="css/pictureView.css">
-    <link rel="stylesheet" href="css/styles.css">
+    
+    <link rel="stylesheet" href="css/global-layout.css">
+    <link rel="stylesheet" href="pictureView/css/timeSelector.css">
+    <link rel="stylesheet" href="pictureView/css/deviceSelector.css">
+    <link rel="stylesheet" href="pictureView/css/pictureView.css">
+    <link rel="stylesheet" href="pictureView/css/styles.css">
 <style>
 
 </style>
 </head>
 <body>
+    <!-- Header -->
+    <div id="global-header"></div>
+
     <div class="container">
+
         <div class="header">
-            <div class="nav-back">
-                <a id="back-link" href="/honeybee" class="back-link">이전</a>
-            </div>
             <h2>Picture View</h2>
         </div>
 
@@ -63,11 +66,16 @@
         <div class="grid-container" id="pictureGrid">
             <!-- 여기에 동적으로 데이터 추가 -->
         </div>
-    </div>
 
-    <script src="scripts/timeSelector.js"></script>
-    <script src="scripts/deviceSelector.js"></script>
-    <script src="scripts/dataFetcher.js"></script>
-    <script src="scripts/pictureView.js"></script>
+
+    </div>
+    <!-- Footer -->
+    <div id="global-footer"></div>
+    <script src="scripts/global-layout.js"></script>
+
+    <script src="pictureView/scripts/timeSelector.js"></script>
+    <script src="pictureView/scripts/deviceSelector.js"></script>
+    <script src="pictureView/scripts/dataFetcher.js"></script>
+    <script src="pictureView/scripts/pictureView.js"></script>
 </body>
 </html>

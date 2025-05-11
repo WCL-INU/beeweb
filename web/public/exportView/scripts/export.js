@@ -21,7 +21,7 @@ document.addEventListener('timeRangeUpdated', (event) => {
 
 // 실제 API 호출을 통해 HIVE 데이터를 가져오는 함수
 async function getAreas() {
-    const response = await fetch('/honeybee/api/areahive');
+    const response = await fetch('api/areahive');
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -127,7 +127,7 @@ function dataToExcelForm(datas) {
 
 
 async function getDevices(hiveId) {
-    const response = await fetch(`/honeybee/api/device?hiveId=${hiveId}`);
+    const response = await fetch(`api/device?hiveId=${hiveId}`);
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -138,7 +138,7 @@ async function getDevices(hiveId) {
 }
 
 async function getInout(deviceId, sTime, eTime) {
-    const response = await fetch(`/honeybee/api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
+    const response = await fetch(`api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -149,7 +149,7 @@ async function getInout(deviceId, sTime, eTime) {
 }
 
 async function getSensor(deviceId, sTime, eTime) {
-    const response = await fetch(`/honeybee/api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
+    const response = await fetch(`api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
     const data = await response.json();
 
     if (!data || !data.length) {

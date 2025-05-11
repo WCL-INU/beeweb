@@ -8,18 +8,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const hive = await getHiveById(hiveId);
     if (!hive) {
         alert('존재하지 않는 HIVE입니다.');
-        window.location.href = 'area_list.html';
+        window.location.href = `${window.BASE_PATH}managementView`;
+        // window.location.href = 'area_list.html';
     }
 
     const backlink = document.getElementById('back-link');
-    backlink.href = `hive_list.html?area_id=${hive.area_id}`;
+    backlink.href = `${window.BASE_PATH}managementView/hive_list?area_id=${hive.area_id}`;
+    // backlink.href = `hive_list.html?area_id=${hive.area_id}`;
 
     const title = document.getElementById('deviceListTitle');
     title.textContent = `(${hive.name}) : DEVICE 관리`;
 
     // 추가 버튼 액션 등록
     document.getElementById('addDeviceButton').onclick = () => {
-        window.location.href = `device_add.html?hive_id=${hiveId}`;
+        window.location.href = `${window.BASE_PATH}managementView/device_add?hive_id=${hiveId}`;
+        // window.location.href = `device_add.html?hive_id=${hiveId}`;
     };
 
     let devices = await getDevicesByHiveId(hiveId); // 함수는 실제 데이터에 맞게 구현 필요
@@ -59,7 +62,8 @@ function prepareDelete(type, id) {
 
 // area ID로 AREA 이름 가져오기
 async function getAreaNameById(id) {
-    const response = await fetch(`/honeybee/api/area?areaId=${id}`);
+    const response = await fetch(`${window.BASE_PATH}api/area?areaId=${id}`);
+    // const response = await fetch(`api/area?areaId=${id}`);
     const data = await response.json();
 
     // data가 존재하고 배열이 아닐 경우 처리
@@ -75,7 +79,8 @@ async function getAreaNameById(id) {
 }
 
 async function getDevicesByHiveId(id) {
-    const url = `/honeybee/api/device?hiveId=${id}`;
+    const url = `${window.BASE_PATH}api/device?hiveId=${id}`;
+    // const url = `api/device?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -98,7 +103,8 @@ async function getDevicesByHiveId(id) {
 }
 
 async function getHiveById(id) {
-    const url = `/honeybee/api/hive?hiveId=${id}`;
+    const url = `${window.BASE_PATH}api/hive?hiveId=${id}`;
+    // const url = `api/hive?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -123,8 +129,8 @@ document.addEventListener('modalLoaded', () => {
             const id = window.deleteId;
 
             if (type === 'device') {
-
-                await fetch(`/honeybee/api/device?deviceId=${id}`, { method: 'DELETE' })
+                await fetch(`${window.BASE_PATH}api/device?deviceId=${id}`, { method: 'DELETE' })
+                // await fetch(`api/device?deviceId=${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
                         alert('DEVICE가 삭제되었습니다.');
@@ -176,7 +182,8 @@ function renderTable(devices) {
         const editButton = document.createElement('button');
         editButton.textContent = '수정';
         editButton.onclick = () => {
-            window.location.href = `device_add.html?hive_id=${hiveId}&device_id=${device.id}`;
+            window.location.href = `${window.BASE_PATH}managementView/device_add?hive_id=${hiveId}&device_id=${device.id}`;
+            // window.location.href = `device_add.html?hive_id=${hiveId}&device_id=${device.id}`;
         };
         actionsCell.appendChild(editButton);
 
@@ -195,7 +202,8 @@ function renderTable(devices) {
 }
 
 async function getDeviceTypes() {
-    const url = '/honeybee/api/devicetypes';
+    const url  = `${window.BASE_PATH}api/devicetypes`;
+    // const url = 'api/devicetypes';
     const response = await fetch(url);
     const data = await response.json();
 

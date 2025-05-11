@@ -3,7 +3,7 @@ let fetcher_tRange = {sTime: null, eTime: null};
 let fetcher_dataList = [];
 
 async function fetchInOutData(deviceId, sTime, eTime) {
-    const url = `/honeybee/api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
+    const url = `${window.BASE_PATH}api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
     const response = await fetch(url);
     const data = await response.json();
     console.log(`Data received for device ${deviceId}:`, data);
@@ -11,7 +11,7 @@ async function fetchInOutData(deviceId, sTime, eTime) {
 }
 
 async function fetchSensorData(deviceId, sTime, eTime) {
-    const url = `/honeybee/api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
+    const url = `${window.BASE_PATH}api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
     const response = await fetch(url);
     const data = await response.json();
     console.log(`Data received for device ${deviceId}:`, data);

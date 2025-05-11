@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // areaName이 Unknown이면 area목록으로 이동
     if (area_name === 'Unknown') {
         alert('존재하지 않는 AREA입니다.');
-        window.location.href = 'area_list.html';
+        window.location.href = `${window.BASE_PATH}managementView/area_list`;
     }
 
     const title = document.getElementById('hiveListTitle');
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 추가 버튼 액션 등록
     document.getElementById('addHiveButton').onclick = () => {
-        window.location.href = `hive_add.html?area_id=${areaId}`;
+        window.location.href = `${window.BASE_PATH}managementView/hive_add?area_id=${areaId}`;
     };
 
     let hives = await getHivesByAreaId(areaId); // 함수는 실제 데이터에 맞게 구현 필요
@@ -55,7 +55,7 @@ function prepareDelete(type, id) {
 }
 
 async function getHivesByAreaId(id) {
-    const response = await fetch(`/honeybee/api/hive?areaId=${id}`);
+    const response = await fetch(`${window.BASE_PATH}api/hive?areaId=${id}`);
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -76,7 +76,7 @@ async function getHivesByAreaId(id) {
 
 // area ID로 AREA 이름 가져오기
 async function getAreaNameById(id) {
-    const response = await fetch(`/honeybee/api/area?areaId=${id}`);
+    const response = await fetch(`${window.BASE_PATH}api/area?areaId=${id}`);
     const data = await response.json();
 
     // data가 존재하고 배열이 아닐 경우 처리
@@ -102,7 +102,7 @@ document.addEventListener('modalLoaded', () => {
 
             if (type === 'hive') {
 
-                await fetch(`/honeybee/api/hive?hiveId=${id}`, { method: 'DELETE' })
+                await fetch(`${window.BASE_PATH}api/hive?hiveId=${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
                         alert('HIVE가 삭제되었습니다.');
@@ -137,7 +137,7 @@ function renderTable(hives) {
         // HIVE 이름 (링크)
         const nameCell = document.createElement('td');
         const link = document.createElement('a');
-        link.href = `device_list.html?hive_id=${hive.id}`;
+        link.href = `${window.BASE_PATH}managementView/device_list?hive_id=${hive.id}`;
         link.textContent = hive.name;
         nameCell.appendChild(link);
         row.appendChild(nameCell);
@@ -154,7 +154,7 @@ function renderTable(hives) {
         const editButton = document.createElement('button');
         editButton.textContent = '수정';
         editButton.onclick = () => {
-            window.location.href = `hive_add.html?area_id=${areaId}&hive_id=${hive.id}`;
+            window.location.href = `${window.BASE_PATH}managementView/hive_add?area_id=${areaId}&hive_id=${hive.id}`;
         };
         actionsCell.appendChild(editButton);
 

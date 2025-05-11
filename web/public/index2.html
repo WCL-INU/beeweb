@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Main</title>
+
+    <link rel="stylesheet" href="css/global-layout.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <div id="global-header"></div>
+
+    <div class="header">
+        <h1>Smart Hive State Viewer</h1>
+    </div>
+
+        <!-- Button Container -->
+        <div class="container">
+            <div class="button-container">
+                <button data-path="hiveView">Hive View</button>
+                <button data-path="compareView">Compare View</button>
+            </div>
+            <div class="button-container">
+                <button data-path="pictureView">Picture View</button>
+                <div class="empty-button"></div>
+            </div>
+            <div class="button-container">
+                <button data-path="exportView">Export Data</button>
+                <button data-path="managementView">Management</button>
+            </div>
+        </div>
+    <!-- Footer -->
+    <div id="global-footer"></div>
+
+    <!-- 스크립트 경로도 상대 경로로 -->
+    <script src="scripts/global-layout.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // ✅ 모든 `data-path` 속성이 있는 버튼에 `BASE_PATH` 적용
+            document.querySelectorAll("button[data-path]").forEach(button => {
+                const pagePath = button.getAttribute("data-path");
+                button.onclick = () => {
+                window.location.href = `${window.BASE_PATH}${pagePath}`;
+                };
+            });
+        });
+    </script>
+</body>
+
+</html>

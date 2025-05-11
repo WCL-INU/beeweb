@@ -4,13 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <title>DEVICE 관리</title>
+    <link rel="stylesheet" href="../css/global-layout.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- header -->
+    <div id="global-header"></div>
+
     <div class="container">
         <div class="header">
             <div class="nav-back">
-                <a id="back-link" href="area_list.html" class="back-link">이전</a>
+                <a id="back-link" data-path="area_list" class="back-link">이전</a>
             </div>
             <h2 id="deviceListTitle">DEVICE 관리</h2>
         </div>
@@ -47,7 +51,8 @@
                     <td>CAMERA</td>
                     <td>192.168.1.1</td>
                     <td class="actions">
-                        <button onclick="window.location.href='device_add.html?device_id=1&hive_id=1'">수정</button>
+                        <button class="device-edit-btn" data-device-id="1" data-hive-id="1">수정</button>
+                        <!-- <button onclick="window.location.href='device_add.html?device_id=1&hive_id=1'">수정</button> -->
                         <button class="delete" onclick="prepareDelete('device', 1)">삭제</button>
                     </td>
                 </tr>
@@ -57,7 +62,8 @@
                     <td>SENSOR</td>
                     <td>192.168.1.2</td>
                     <td class="actions">
-                        <button onclick="window.location.href='device_add.html?device_id=2&hive_id=1'">수정</button>
+                        <button class="device-edit-btn" data-device-id="2" data-hive-id="1">수정</button>
+                        <!-- <button onclick="window.location.href='device_add.html?device_id=2&hive_id=1'">수정</button> -->
                         <button class="delete" onclick="prepareDelete('device', 2)">삭제</button>
                     </td>
                 </tr>
@@ -69,7 +75,19 @@
     <!-- 모달 로드 -->
     <div id="modal"></div>
 
+    <!-- footer -->
+    <div id="global-footer"></div>
+
+    <script src="../scripts/global-layout.js"></script>
+
     <script src="scripts/modal.js"></script>
     <script src="scripts/device_list.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const managementBasePath = `${window.BASE_PATH}managementView`;
+            // 'back-link' 요소의 href 속성 업데이트
+            document.getElementById('back-link').href = managementBasePath;
+        });
+    </script>
 </body>
 </html>
