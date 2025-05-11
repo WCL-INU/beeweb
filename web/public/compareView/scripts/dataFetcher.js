@@ -5,6 +5,12 @@ let fetcher_dataList = [];
 async function fetchInOutData(deviceId, sTime, eTime) {
     const url = `${window.BASE_PATH}api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
     const response = await fetch(url);
+
+    if (!response.ok) {
+        console.warn(`No InOut data for device ${deviceId} (status: ${response.status})`);
+        return [];  // 데이터 없음 처리
+    }
+
     const data = await response.json();
     console.log(`Data received for device ${deviceId}:`, data);
     return data;
@@ -13,6 +19,12 @@ async function fetchInOutData(deviceId, sTime, eTime) {
 async function fetchSensorData(deviceId, sTime, eTime) {
     const url = `${window.BASE_PATH}api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
     const response = await fetch(url);
+
+    if (!response.ok) {
+        console.warn(`No Sensor data for device ${deviceId} (status: ${response.status})`);
+        return [];  // 데이터 없음 처리
+    }
+
     const data = await response.json();
     console.log(`Data received for device ${deviceId}:`, data);
     return data;
