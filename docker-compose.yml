@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   mariadb:
     build:
       context: ./db
       dockerfile: Dockerfile
-    ports:
-      - "3306:3306" # 로컬에서 접근 가능하게 열어둠
+    expose:
+      - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -15,38 +13,30 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: always
-    networks:
-      - shared-network
 
-  # api:
-  #   build:
-  #     context: ./api
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     - mariadb
-  #   # ports:  # 동일 네트워크에서만 사용
-  #   #   - "8090:8090"
-  #   environment:
-  #     DB_HOST: mariadb
-  #     DB_USER: ${MYSQL_USER}
-  #     DB_PASSWORD: ${MYSQL_PASSWORD}
-  #     DB_NAME: ${MYSQL_DATABASE}
-  #   restart: always
-  #   networks:
-  #     - shared-network
-
-  data-collector:
+  api:
     build:
-      context: ./data-collector
+      context: ./tsapi
       dockerfile: Dockerfile
     depends_on:
-      - api
+      - mariadb
     environment:
-      CHANNEL_ID1: ${THINGSPEAK_CHANNEL_ID1}
-      CHANNEL_ID2: ${THINGSPEAK_CHANNEL_ID2}
+      DB_HOST: mariadb
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
     restart: always
-    networks:
-      - shared-network
+
+  # data-collector:
+  #   build:
+  #     context: ./data-collector
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - api
+  #   environment:
+  #     CHANNEL_ID1: ${THINGSPEAK_CHANNEL_ID1}
+  #     CHANNEL_ID2: ${THINGSPEAK_CHANNEL_ID2}
+  #   restart: always
 
   web:
     build:
@@ -57,17 +47,11 @@ services:
     environment:
       SESSION_SECRET: ${SESSION_SECRET}
     ports:
-      - "8081:8081"
+      - "8081:8080"
     volumes:
       - ./web:/usr/src/app   # 로컬 경로를 컨테이너 경로로 마운트
       - /usr/src/app/node_modules   # node_modules는 컨테이너 내부에만 존재하게 함
     restart: always
-    networks:
-      - shared-network
-
 
 volumes:
   db_data:
-
-networks:
-  shared-network: # 어짜피 프로젝트 명으로 prefix 붙음

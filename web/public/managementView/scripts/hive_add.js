@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 취소 버튼 액션 등록
     document.getElementById('cancelButton').onclick = () => {
-        window.location.href = `hive_list.html?area_id=${areaId}`;
+        window.location.href = `${window.BASE_PATH}managementView/hive_list?area_id=${areaId}`;
+        // window.location.href = `hive_list.html?area_id=${areaId}`;
     };
 
 
@@ -39,7 +40,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('areaSelect').value = hive.area_id;
         } else {
             alert('존재하지 않는 HIVE입니다.');
-            window.location.href = `hive_list.html?area_id=${areaId}`;
+            window.location.href = `${window.BASE_PATH}managementView/hive_list?area_id=${areaId}`;
+            // window.location.href = `hive_list.html?area_id=${areaId}`;
         }
     } else {
         title.textContent = `(${area_name}) : HIVE 추가`;
@@ -59,7 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (hiveId) {
-            await fetch('/honeybee/api/hive', {
+            await fetch(`${window.BASE_PATH}api/hive`, {
+            // await fetch('api/hive', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ hiveId: hiveId, name: hiveName, areaId: areaId })
@@ -79,7 +82,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             return;
         } else {
-            await fetch('/honeybee/api/hive', {
+            await fetch(`${window.BASE_PATH}api/hive`, {
+            // await fetch('api/hive', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: hiveName, areaId: areaId })
@@ -104,7 +108,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // area ID로 AREA 이름 가져오기
 async function getAreaNameById(id) {
-    const response = await fetch(`/honeybee/api/area?areaId=${id}`);
+    const response = await fetch(`${window.BASE_PATH}api/area?areaId=${id}`);
+    // const response = await fetch(`api/area?areaId=${id}`);
     const data = await response.json();
 
     // data가 존재하고 배열이 아닐 경우 처리
@@ -120,10 +125,11 @@ async function getAreaNameById(id) {
 }
 
 async function getHiveById(id) {
-    const url = `/honeybee/api/hive?hiveId=${id}`;
+    const url = `${window.BASE_PATH}api/hive?hiveId=${id}`;
+    // const url = `api/hive?hiveId=${id}`;
     const response = await fetch(url);
     const data = await response.json();
-
+    console.log(data);
     if (!Array.isArray(data) || data.length === 0) {
         return null;
     }
@@ -136,7 +142,8 @@ async function getHiveById(id) {
 }
 
 async function getAreas() {
-    const response = await fetch('/honeybee/api/area');
+    const response = await fetch(`${window.BASE_PATH}api/area`);
+    // const response = await fetch('api/area');
     const data = await response.json();
 
     if (!data || !data.length) {

@@ -32,7 +32,7 @@ function selector_checkDevice(deviceId, isChecked) {
 
 async function fetchAreaHiveData() {
     try {
-        const response = await fetch('/honeybee/api/areahive');
+        const response = await fetch(`${window.BASE_PATH}api/areahive`);
         let data = await response.json();
 
         // 하이브 이름을 기준으로 정렬하고, 하이브가 없는 지역 제거
@@ -54,14 +54,14 @@ async function fetchAreaHiveData() {
 }
 
 async function fetchDevicesByHive(hiveId) {
-    const url = `/honeybee/api/device?hiveId=${hiveId}`;
+    const url = `${window.BASE_PATH}api/device?hiveId=${hiveId}`;
     const response = await fetch(url);
     const data = await response.json();
     return data;
   }
 
 async function fetchDeviceByDeviceId(deviceId) {
-    const url = `/honeybee/api/device?deviceId=${deviceId}`;
+    const url = `${window.BASE_PATH}api/device?deviceId=${deviceId}`;
     const response = await fetch(url);
     const data = await response.json();
     return data;

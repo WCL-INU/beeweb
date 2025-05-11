@@ -1,41 +1,36 @@
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+    justify-content: center; /* ✅ 세로 중앙 정렬 */
+    min-height: 100vh; /* ✅ 전체 높이 차지 */
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
 .header,
 .footer {
     background-color: #fcefb4;
     color: #372b2b;
     text-align: center;
     padding: 10px 0;
-    width: 100%;
-    position: fixed;
-}
-
-.header {
-    top: 0;
-}
-
-.footer {
-    bottom: 0;
-}
-
-body {
     font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-    margin: 0;
-    padding: 0;
+}
+
+
+/* ✅ 컨테이너 (로그인 폼) */
+.container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-}
-
-.container {
     width: 100%;
     max-width: 400px;
+    align-items: center;
     padding: 20px;
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 80px;
+    margin: auto;
+    height: auto; /* ✅ 블록이 필요 이상으로 늘어나지 않도록 설정 */
 }
 
 h2 {
@@ -43,28 +38,29 @@ h2 {
     color: #372b2b;
 }
 
-form {
+#loginForm {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-label {
+#loginForm label {
     font-weight: bold;
     color: #372b2b;
 }
 
-input[type="text"],
-input[type="password"] {
+#loginForm input[type="text"],
+#loginForm input[type="password"] {
     padding: 10px;
     font-size: 16px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    width: calc(100% - 22px); /* Padding and border adjustments */
-    box-sizing: border-box; /* To ensure width calculation includes padding and borders */
+    width: 100%; /* ✅ 가로 너비를 부모 요소에 맞춤 */
+    box-sizing: border-box; /* ✅ 패딩과 보더 포함 */
 }
 
-button {
+/* ✅ 오직 로그인 폼 내부 버튼에만 스타일 적용 */
+#loginForm button {
     padding: 10px;
     font-size: 16px;
     color: #fff;
@@ -75,9 +71,10 @@ button {
     transition: background-color 0.3s ease;
 }
 
-button:hover {
+#loginForm button:hover {
     background-color: #555;
 }
+
 
 #error-message {
     color: red;

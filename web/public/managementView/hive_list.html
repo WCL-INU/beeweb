@@ -4,13 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <title>HIVE 관리</title>
+    <link rel="stylesheet" href="../css/global-layout.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- header -->
+    <div id="global-header"></div>
+    
     <div class="container">
         <div class="header">
             <div class="nav-back">
-                <a id="back-link" href="area_list.html" class="back-link">이전</a>
+                <a id="back-link" data-path="area_list" class="back-link">이전</a>
             </div>
             <h2 id="hiveListTitle">HIVE 관리</h2>
         </div>
@@ -40,19 +44,23 @@
                 <!-- 예시 데이터 -->
                 <tr>
                     <td>1</td>
-                    <td><a href="device_list.html?hive_id=1">Hive A</a></td>
+                    <td><a class="hive-list-link" data-hive-id="1">Hive A</a></td>
+                    <!-- <td><a href="device_list.html?hive_id=1">Hive A</a></td> -->
                     <td>Example 1</td>
                     <td class="actions">
-                        <button onclick="window.location.href='hive_add.html?hive_id=1'">수정</button>
+                        <button class="hive-edit-btn" data-hive-id="1">수정</button>
+                        <!-- <button onclick="window.location.href='hive_add.html?hive_id=1'">수정</button> -->
                         <button class="delete" onclick="prepareDelete('hive', 1)">삭제</button>
                     </td>
                 </tr>
                 <tr>
                     <td>2</td>
-                    <td><a href="device_list.html?hive_id=2">Hive B</a></td>
+                    <td><a class="hive-list-link" data-hive-id="2">Hive B</a></td>
+                    <!-- <td><a href="device_list.html?hive_id=2">Hive B</a></td> -->
                     <td>Example 2</td>
                     <td class="actions">
-                        <button onclick="window.location.href='hive_add.html?hive_id=2'">수정</button>
+                        <button class="hive-edit-btn" data-hive-id="2">수정</button>
+                        <!-- <button onclick="window.location.href='hive_add.html?hive_id=2'">수정</button> -->
                         <button class="delete" onclick="prepareDelete('hive', 2)">삭제</button>
                     </td>
                 </tr>
@@ -64,7 +72,19 @@
     <!-- 모달 로드 -->
     <div id="modal"></div>
 
+    <!-- footer -->
+    <div id="global-footer"></div>
+
+    <script src="../scripts/global-layout.js"></script>
+
     <script src="scripts/modal.js"></script>
     <script src="scripts/hive_list.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const managementBasePath = `${window.BASE_PATH}managementView`;
+            // 'back-link' 요소의 href 속성 업데이트
+            document.getElementById('back-link').href = managementBasePath;
+        });
+    </script>
 </body>
 </html>

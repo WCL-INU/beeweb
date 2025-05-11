@@ -10,6 +10,7 @@ const router = express.Router();
 router.use(express.json());
 
 router.get('/inout', async (req: Request, res: Response) => {
+    console.log('inout comming');
     // #swagger.tags = ['Data']
     // #swagger.description = 'Endpoint to fetch inout data'
     try {

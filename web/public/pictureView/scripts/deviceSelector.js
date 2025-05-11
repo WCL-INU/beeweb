@@ -88,7 +88,7 @@ async function loadHives(areaId) {
     if (areaId) {
         updateURL({ areaId });  // areaId가 변경되면 hiveId와 deviceId는 자동으로 삭제
         deviceList.innerHTML = '';  // Hive가 변경되면 Device 목록 초기화
-        const hiveData = await fetchData(`/honeybee/api/hive?areaId=${areaId}`);
+        const hiveData = await fetchData(`${window.BASE_PATH}api/hive?areaId=${areaId}`);
         if (hiveData && hiveData.length > 0) {
             updateSelect(hiveSelect, hiveData);
             hiveSelect.disabled = false;  // Hive 목록이 있으면 활성화
@@ -106,7 +106,7 @@ async function loadDevices(hiveId) {
     if (hiveId) {
         updateURL({ hiveId });  // hiveId가 변경되면 deviceId는 자동으로 삭제
 
-        const deviceData = await fetchData(`/honeybee/api/device?hiveId=${hiveId}`);
+        const deviceData = await fetchData(`${window.BASE_PATH}api/device?hiveId=${hiveId}`);
         if (deviceData && deviceData.length > 0) {
             deviceData.forEach(device => {
                 const deviceType = deviceTypes.find(type => type.id === device.type_id);
@@ -138,8 +138,8 @@ async function loadDevices(hiveId) {
 
 // 문서 로드시 Area, Hive, Device 데이터 로드
 document.addEventListener('DOMContentLoaded', async function () {
-    deviceTypes = await fetchData('/honeybee/api/devicetypes');
-    const areaData = await fetchData('/honeybee/api/area');
+    deviceTypes = await fetchData(`${window.BASE_PATH}api/devicetypes`);
+    const areaData = await fetchData(`${window.BASE_PATH}api/area`);
     const areaSelect = document.getElementById('area-select');
     updateSelect(areaSelect, areaData);
 

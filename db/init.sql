@@ -89,13 +89,13 @@ ON DUPLICATE KEY UPDATE pw = VALUES(pw), grade = VALUES(grade);
 
 -- 제약조건 및 인덱스 설정
 ALTER TABLE inout_data
-    ADD CONSTRAINT fk_inout_device FOREIGN KEY (device_id) REFERENCES devices(id);
+    ADD CONSTRAINT fk_inout_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE;
 
 ALTER TABLE sensor_data
-    ADD CONSTRAINT fk_sensor_device FOREIGN KEY (device_id) REFERENCES devices(id);
+    ADD CONSTRAINT fk_sensor_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE;
 
 ALTER TABLE camera_data
-    ADD CONSTRAINT fk_camera_device FOREIGN KEY (device_id) REFERENCES devices(id);
+    ADD CONSTRAINT fk_camera_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE;
 
 ALTER TABLE hives
     ADD CONSTRAINT fk_hives_area FOREIGN KEY (area_id) REFERENCES areas(id);

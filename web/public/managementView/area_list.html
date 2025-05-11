@@ -4,15 +4,17 @@
     <head>
         <meta charset="UTF-8">
         <title>AREA 관리</title>
-        <link rel="stylesheet" href="css/styles.css">
+        <link rel="stylesheet" href="css/global-layout.css">
+        <link rel="stylesheet" href="managementView/css/styles.css">
     </head>
 <body>
     <div class="container">
+
+        <!-- header -->
+        <div id="global-header"></div>
+
         <!-- 타이틀을 주황색 헤더로 두름 -->
         <div class="header">
-            <div class="nav-back">
-                <a id="back-link" href="/honeybee" class="back-link">이전</a>
-            </div>
             <h2>AREA 관리</h2>
         </div>
 
@@ -26,7 +28,7 @@
             <button id="searchBtn">검색</button>
         </div>
 
-        <button onclick="window.location.href='area_add.html'">AREA 추가</button>
+        <button id="area-add-btn">AREA 추가</button>
         <table id="areaTable">
             <thead>
                 <tr>
@@ -37,35 +39,47 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- 실제 데이터는 JavaScript를 통해 동적으로 삽입 -->
-                <!-- 예시 데이터 -->
-                <!-- 1: [37.375, 126.633], // 인천대 -->
-                <!-- 2: [36.544, 128.8007] // 안동대 -->
+                <!-- 실제 데이터는 DB자료로 동적으로 삽입-->
                 <tr>
                     <td>1</td>
-                    <td><a href="area_list.html?area_id=1">인천대</a></td>
+                    <td><a class="area-list-link" data-area-id="1">인천대</a></td>
                     <td>37.375, 126.633</td>
                     <td class="actions">
-                        <button onclick="window.location.href='area_add.html?area_id=1'">수정</button>
+                        <button class="area-edit-btn" data-area-id="1">수정</button>
                         <button class="delete" onclick="prepareDelete('area', 1)">삭제</button>
                     </td>
                 </tr>
                 <tr>
                     <td>2</td>
-                    <td><a href="area_list.html?area_id=2">안동대</a></td>
+                    <td><a class="area-list-link" data-area-id="2">안동대</a></td>
                     <td>36.544, 128.8007</td>
                     <td class="actions">
-                        <button onclick="window.location.href='area_add.html?area_id=2'">수정</button>
+                        <button class="area-edit-btn" data-area-id="2">수정</button>
                         <button class="delete" onclick="prepareDelete('area', 2)">삭제</button>
+                    </td>
                 </tr>
-                <!-- 실제 데이터는 API를 통해 동적으로 삽입 -->
             </tbody>
         </table>
     </div>
 
     <!-- 모달 로드 -->
     <div id="modal"></div>
-    <script src="scripts/modal.js"></script>
-    <script src="scripts/area_list.js"></script>
+
+    <!-- footer -->
+    <div id="global-footer"></div>
+
+    <script src="scripts/global-layout.js"></script>
+
+    <script src="managementView/scripts/modal.js"></script>
+    <script src="managementView/scripts/area_list.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const managementBasePath = `${window.BASE_PATH}managementView/`;
+            // ✅ AREA 추가 버튼
+            document.getElementById('area-add-btn').addEventListener('click', () => {
+                window.location.href = `${managementBasePath}area_add`;
+            });
+        });
+    </script>
 </body>
 </html>

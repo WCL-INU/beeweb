@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('areaLocation').value = area.location;
         } else {
             alert('존재하지 않는 AREA입니다.');
-            window.location.href = 'area_list.html';
+            window.location.href = `${window.BASE_PATH}managementView`;
         }
     } else {
         title.textContent = 'AREA 추가';
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (areaId) {
-            await fetch('/honeybee/api/area', {
+            await fetch(`${window.BASE_PATH}api/area`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ areaId: areaId, name: areaName, location: areaLocation })
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .then(data => {
                     if (data.message === 'Area updated successfully') {
                         alert('AREA가 수정되었습니다.');
-                        window.location.href = 'area_list.html';
+                        window.location.href = `${window.BASE_PATH}managementView`;
                     } else if (data.message === 'Area not found') {
                         alert('존재하지 않는 AREA입니다.');
                     }
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             return;
         } else {
-            await fetch('/honeybee/api/area', {
+            await fetch(`${window.BASE_PATH}api/area`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: areaName, location: areaLocation })
@@ -66,20 +66,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .then(data => {
                     if (data.message === 'Area created successfully') {
                         alert('AREA가 추가되었습니다.');
-                        window.location.href = 'area_list.html';
+                        window.location.href = `${window.BASE_PATH}managementView`;
                     }
                 })
                 .catch(error => {
                     console.error('Error adding AREA:', error);
                     alert('AREA 추가에 실패했습니다.');
                 });
-            window.location.href = 'area_list.html';
+            window.location.href = `${window.BASE_PATH}managementView`;
         }
     });
 });
 
 async function getAreaById(areaId) {
-    const response = await fetch(`/honeybee/api/area?areaId=${areaId}`);
+    const response = await fetch(`${window.BASE_PATH}api/area?areaId=${areaId}`);
     const data = await response.json();
     
     if (!Array.isArray(data) || data.length === 0) {

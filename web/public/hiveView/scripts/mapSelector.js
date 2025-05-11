@@ -20,6 +20,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // 지역에 따라 지도를 업데이트하는 함수
 function updateMap(regionId, regionName) {
+    // TODO : DB에서 가져온 값을 사용하도록 변경해야함
     const regionCoordinates = {
         1: [37.375, 126.633], // 인천대
         2: [36.544, 128.8007] // 안동대

@@ -21,7 +21,7 @@ document.addEventListener('timeRangeUpdated', (event) => {
 
 // 실제 API 호출을 통해 HIVE 데이터를 가져오는 함수
 async function getAreas() {
-    const response = await fetch('/honeybee/api/areahive');
+    const response = await fetch('api/areahive');
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -41,23 +41,104 @@ async function getAreas() {
     return hives;
 }
 
+// data 구조
+//  [hive {
+//      device [{
+//          inout {}
+//          sensor {}
+//      }]
+//  }]
 async function getDatas(hives, sTime, eTime) {
-    const datas = [];
-    for (const hive of hives) {
-        const inout = await getInout(hive.id, sTime, eTime);
-        const sensor = await getSensor(hive.id, sTime, eTime);        
-        datas.push({
-            hive: hive,
-            inout: inout,
-            sensor: sensor
-        });
-    }
+    // hives 배열을 깊은 복사하여 원본 보호
+    const datas = hives.map(hive => ({ ...hive }));
+
+    await Promise.all(datas.map(async hive => {
+        const devices = await getDevices(hive.id);
+        if (!devices || !devices.length) {
+            hive.devices = []; // 빈 배열로 설정하여 undefined 방지
+            return;
+        }
+
+        // 모든 `device`의 데이터 가져오기 (병렬 실행)
+        await Promise.all(devices.map(async device => {
+            if (device.type_id == 2) {
+                device.sensor_data = await getSensor(device.id, sTime, eTime);
+            } else if (device.type_id == 3) {
+                device.inout_data = await getInout(device.id, sTime, eTime);
+            }
+        }));
+
+        hive.devices = devices; // 최종 결과 반영
+    }));
 
     return datas;
 }
 
+// 모든 data를 엑셀 폼으로 맵핑
+// Time | 지역 ID | 지역 이름 | Hive ID | Hive 이름 | Device ID | Device 이름 | 
+//                                  분류 | In Field | Out Field | Temperature | Humidity | CO2 | Weight  
+function dataToExcelForm(datas) {
+    let excelData = [];
+    datas.forEach(hive => {
+        hive.devices.forEach(device => {
+            if (device.type_id == 2) {
+                device.sensor_data.forEach(sensor => {
+                    excelData.push({
+                        'Time': sensor.time,
+                        '지역 ID': hive.id,
+                        '지역 이름': hive.area_name,
+                        'Hive ID': hive.id,
+                        'Hive 이름': hive.name,
+                        'Device ID': device.id,
+                        'Device 이름': device.name,
+                        '분류': 'Sensor',
+                        'In Field': '',
+                        'Out Field': '',
+                        'Temperature': sensor.temp,
+                        'Humidity': sensor.humi,
+                        'CO2': sensor.co2,
+                        'Weight': sensor.weigh
+                    });
+                });
+            } else if (device.type_id == 3) {
+                device.inout_data.forEach(inout => {
+                    excelData.push({
+                        'Time': inout.time,
+                        '지역 ID': hive.id,
+                        '지역 이름': hive.area_name,
+                        'Hive ID': hive.id,
+                        'Hive 이름': hive.name,
+                        'Device ID': device.id,
+                        'Device 이름': device.name,
+                        '분류': 'InOut',
+                        'In Field': inout.in_field,
+                        'Out Field': inout.out_field,
+                        'Temperature': '',
+                        'Humidity': '',
+                        'CO2': '',
+                        'Weight': ''
+                    });
+                });
+            }
+        });
+    });
+    return excelData;
+}
+
+
+async function getDevices(hiveId) {
+    const response = await fetch(`api/device?hiveId=${hiveId}`);
+    const data = await response.json();
+
+    if (!data || !data.length) {
+        return [];
+    }
+
+    return data;
+}
+
 async function getInout(deviceId, sTime, eTime) {
-    const response = await fetch(`/honeybee/api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
+    const response = await fetch(`api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -68,7 +149,7 @@ async function getInout(deviceId, sTime, eTime) {
 }
 
 async function getSensor(deviceId, sTime, eTime) {
-    const response = await fetch(`/honeybee/api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
+    const response = await fetch(`api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`);
     const data = await response.json();
 
     if (!data || !data.length) {
@@ -79,63 +160,9 @@ async function getSensor(deviceId, sTime, eTime) {
 }
 
 function saveHivesToExcel(data) {
-    // 1. 모든 inout과 sensor 데이터를 time을 기준으로 정렬해서 하나의 배열로 만듦
-    let combinedData = [];
-
-    data.forEach(item => {
-        // hive 정보는 각 행에 공통으로 들어감
-        const { id, name, area_name } = item.hive;
-
-        // inout 데이터를 추가
-        item.inout.forEach(inoutData => {
-            combinedData.push({
-                time: inoutData.time,
-                hive_id: id,
-                hive_name: name,
-                area_name: area_name,
-                in_field: inoutData.in_field,
-                out_field: inoutData.out_field,
-                temp: '',
-                humi: '',
-                co2: '',
-                weigh: ''
-            });
-        });
-
-        // sensor 데이터를 추가
-        item.sensor.forEach(sensorData => {
-            combinedData.push({
-                time: sensorData.time,
-                hive_id: id,
-                hive_name: name,
-                area_name: area_name,
-                in_field: '',
-                out_field: '',
-                temp: sensorData.temp,
-                humi: sensorData.humi,
-                co2: sensorData.co2,
-                weigh: sensorData.weigh
-            });
-        });
-    });
-
-    // 2. time을 기준으로 데이터 정렬
-    combinedData.sort((a, b) => new Date(a.time) - new Date(b.time));
-
-    // 3. 엑셀에 저장할 데이터 구조 설정
-    const excelData = combinedData.map(item => ({
-        'Time': item.time,
-        'HIVE ID': item.hive_id,
-        'HIVE 이름': item.hive_name,
-        '지역 이름': item.area_name,
-        'In Field': item.in_field,
-        'Out Field': item.out_field,
-        'Temperature': item.temp,
-        'Humidity': item.humi,
-        'CO2': item.co2,
-        'Weight': item.weigh
-    }));
-
+    // 불러온 데이터를 엑셀 폼으로 변환
+    const excelData = dataToExcelForm(data);
+    
     // 4. 새로운 워크북 생성
     const wb = XLSX.utils.book_new();
 

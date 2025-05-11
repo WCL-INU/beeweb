@@ -6,7 +6,7 @@ const path = require('path');
 
 const router = express.Router();
 
-const API_BASE_URL = 'http://api:8090/api'; // 이제 프록시된 경로로 접근
+const API_BASE_URL = 'http://api:8090'; // 이제 프록시된 경로로 접근
 
 // Passport Local Strategy 설정
 passport.use(new LocalStrategy({
@@ -39,7 +39,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
   try {
     // 세션에서 저장한 id를 사용하여 사용자 정보를 API 서버에서 가져옵니다.
-    const response = await axios.get(`${API_BASE_URL}/users/${id}`);
+    const response = await axios.get(`${API_BASE_URL}/user/${id}`);
     done(null, response.data);
   } catch (error) {
     console.error('Login API error:', error.response ? error.response.data : error.message);
@@ -54,24 +54,32 @@ router.get('/login', (req, res) => {
 
 // 로그인 요청 처리
 router.post('/login', (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.log('Authentication error');
+      return next(err);
+    }
+    if (!user) {
+      console.log('Authentication failed');
+      return res.redirect('login');
+    }
+    req.logIn(user, (err) => {
       if (err) {
-        console.log('Authentication error');
+        console.log('Login error:', err);
         return next(err);
       }
-      if (!user) {
-        console.log('Authentication failed');
-        return res.redirect('/honeybee/login');
-      }
-      req.logIn(user, (err) => {
-        if (err) {
-          console.log('Login error:', err);
-          return next(err);
-        }
-        return res.redirect('/honeybee');
-      });
-    })(req, res, next);
-  });
+
+      const originalUrl = req.headers.referer || '';
+      console.log('2Original URL:', originalUrl);
+      const segments = originalUrl.split('/').slice(3); // 첫 3개 요소 (http:, '', '도메인') 제거
+      // 첫 번째 경로가 프리픽스인지 확인
+      console.log('2Segments:', segments);
+      const basePath = (segments.length > 1) ? `/${segments[0]}` : '/';
+      console.log('2Base path:', basePath);
+      return res.redirect(`${basePath}`);
+    });
+  })(req, res, next);
+});
 
 // 로그아웃 처리
 router.get('/logout', (req, res) => {
@@ -79,7 +87,7 @@ router.get('/logout', (req, res) => {
     if (err) {
       return next(err);
     }
-    res.redirect('/honeybee/login');
+    res.redirect('login');
   });
 });
 

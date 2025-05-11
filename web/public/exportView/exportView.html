@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>HIVE 데이터 내보내기</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
+    <link rel="stylesheet" href="css/global-layout.css">
+    <link rel="stylesheet" href="exportView/css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
+        <div id="global-header"></div>
+
         <!-- 타이틀을 주황색 헤더로 두름 -->
         <div class="header">
-            <div class="nav-back">
-                <a id="back-link" href="/honeybee" class="back-link">이전</a>
-            </div>
             <h2>HIVE 데이터 내보내기</h2>
         </div>
 
@@ -74,8 +75,12 @@
         </table>
     </div>
 
-    <script src="scripts/timeSelector.js"></script>
-    <script src="scripts/hive_list.js"></script>
-    <script src="scripts/export.js"></script>
+    <!-- footer -->
+    <div id="global-footer"></div>
+
+    <script src="scripts/global-layout.js"></script>
+    <script src="exportView/scripts/timeSelector.js"></script>
+    <script src="exportView/scripts/hive_list.js"></script>
+    <script src="exportView/scripts/export.js"></script>
 </body>
 </html>

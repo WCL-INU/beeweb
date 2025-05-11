@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+
+    <link rel="stylesheet" href="css/global-layout.css">
+    <link rel="stylesheet" href="account/css/login.css">
     <!-- CryptoJS 라이브러리 추가 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <link rel="stylesheet" href="/honeybee/account/css/login.css">
+
 </head>
 <body>
     <!-- Header -->
+    <div id="global-header"></div>
+
     <div class="header">
         <h1>Smart Hive State Viewer</h1>
     </div>
@@ -20,7 +25,7 @@
         <form id="loginForm">
             <div>
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" required autofocus>
             </div>
             <div>
                 <label for="password">Password:</label>
@@ -35,10 +40,9 @@
     </div>
 
     <!-- Footer -->
-    <div class="footer">
-        <p>Wireless Communication LAB, Dept of Embedded System Engineering, Incheon National University</p>
-    </div>
-
-    <script src="/honeybee/account/scripts/loginClient.js"></script>
+    <div id="global-footer"></div>
+    
+    <script src="scripts/global-layout.js"></script>
+    <script src="account/scripts/loginClient.js"></script>
 </body>
 </html>
