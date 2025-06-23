@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
-const BACKUP_DIR = __dirname;
+const BACKUP_DIR = '/app/db/backup'; // 백업 디렉토리
 const HOST = process.env.DB_HOST || 'mariadb';
 const USER = process.env.DB_USER || 'user';
 const PASSWORD = process.env.DB_PASSWORD || 'password';
