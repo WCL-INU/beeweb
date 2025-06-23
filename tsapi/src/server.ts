@@ -7,6 +7,7 @@ import areaRoutes from './routes/area';
 import legacyRoutes from './routes/legacy';
 import userRoutes from './routes/user';
 import dataRoutes from './routes/data';
+import pictureRoutes from './routes/picture';
 import { initializeDatabase } from './db/initialize';
 import { backupDatabase } from './db/backup';
 
@@ -49,6 +50,7 @@ app.use('/hive', hiveRoutes);
 app.use('/area', areaRoutes);
 app.use('/user', userRoutes);
 app.use('/data', dataRoutes);
+app.use('/picture', pictureRoutes);
 
 // Start the server
 app.listen(PORT, () => {

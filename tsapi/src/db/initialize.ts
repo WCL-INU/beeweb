@@ -63,7 +63,7 @@ export const initializeDatabase = async () => {
       UNIQUE KEY unique_device_time (device_id, data_type, time)
     )`);
 
-    await pool.execute(`CREATE TABLE IF NOT EXISTS picutre_data (
+    await pool.execute(`CREATE TABLE IF NOT EXISTS picture_data (
       id INT AUTO_INCREMENT PRIMARY KEY,
       device_id INT NOT NULL,
       picture LONGBLOB,
@@ -120,7 +120,7 @@ export const initializeDatabase = async () => {
     await addConstraintIfNotExists('camera_data', 'fk_camera_device', `ALTER TABLE camera_data ADD CONSTRAINT fk_camera_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_device', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_data_type', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_data_type FOREIGN KEY (data_type) REFERENCES data_types(id) ON DELETE CASCADE`);
-    await addConstraintIfNotExists('picutre_data', 'fk_picutre_device', `ALTER TABLE picutre_data ADD CONSTRAINT fk_picutre_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
+    await addConstraintIfNotExists('picture_data', 'fk_picture_device', `ALTER TABLE picture_data ADD CONSTRAINT fk_picture_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('hives', 'fk_hives_area', `ALTER TABLE hives ADD CONSTRAINT fk_hives_area FOREIGN KEY (area_id) REFERENCES areas(id)`);
     await addConstraintIfNotExists('devices', 'fk_devices_hive', `ALTER TABLE devices ADD CONSTRAINT fk_devices_hive FOREIGN KEY (hive_id) REFERENCES hives(id)`);
     await addConstraintIfNotExists('devices', 'fk_devices_type', `ALTER TABLE devices ADD CONSTRAINT fk_devices_type FOREIGN KEY (type_id) REFERENCES device_types(id)`);

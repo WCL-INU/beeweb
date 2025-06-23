@@ -6,17 +6,17 @@ async function fetchPictureData() {
         if (!fetcher_device || !fetcher_tRange.sTime || !fetcher_tRange.eTime) {
             return;
         }
-        const url = `${window.BASE_PATH}api/camera?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
+        
+        const url = `${window.BASE_PATH}api/picture?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
         const response = await fetch(url);
-        let data = await response.json();
+        const data = await response.json();  // data는 이미 [{ device_id, time, picture: "base64…" }, …] 형태의 배열
 
-        // Buffer 데이터를 Base64로 변환하여 사용할 수 있도록 처리
         const pictures = data.map(item => ({
-            url: `data:image/jpeg;base64,${arrayBufferToBase64(item.picture.data)}`, // Buffer 데이터를 Base64로 변환
-            time: item.time.replace('T', ' ').replace('.000Z', '') // 시간 포맷 수정
+            // picture 필드가 Base64 문자열이므로 바로 사용
+            url:  `data:image/jpeg;base64,${item.picture}`,
+            time: item.time.replace('T', ' ').replace('.000Z', '')
         }));
 
-        // 이벤트로 데이터 전달
         const dataUpdatedEvent = new CustomEvent('dataUpdated', { detail: pictures });
         document.dispatchEvent(dataUpdatedEvent);
 

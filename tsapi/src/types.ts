@@ -69,6 +69,21 @@ export interface SensorData2Value {
     value: number;
 }
 
+// PictureData 관련 인터페이스
+// ===================================================
+export interface PictureDataInsert {
+    device_id: number;
+    time: string;      // MySQL DATETIME 포맷 ("YYYY-MM-DD HH:MM:SS")
+    picture: Buffer;
+}
+
+export interface PictureDataRow {
+    id: number;
+    device_id: number;
+    time: string;
+    picture: Buffer;
+}
+
 export const DATA_TYPE = {
     PICUTRE: 1,   // 현재 사용 안 함
     IN: 2,
