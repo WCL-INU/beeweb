@@ -11,7 +11,7 @@ set +a
 DB_USER="root"  # 복원은 루트 계정 사용
 DB_PASSWORD="$MYSQL_ROOT_PASSWORD"
 DB_NAME="$MYSQL_DATABASE"
-CONTAINER_NAME="beeweb-mariadb"
+CONTAINER_NAME="beeweb-mariadb-1"
 DOCKER_PATH=/snap/bin/docker
 
 BACKUP_FILE=$1

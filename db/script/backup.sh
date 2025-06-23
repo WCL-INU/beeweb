@@ -13,7 +13,7 @@ set +a
 DB_USER="$MYSQL_ROOT_USER"     # 루트 계정은 .env에 없으므로 직접 'root'로 설정
 DB_PASSWORD="$MYSQL_ROOT_PASSWORD"
 DB_NAME="$MYSQL_DATABASE"
-CONTAINER_NAME="beeweb-mariadb"
+CONTAINER_NAME="beeweb-mariadb-1"
 
 DOCKER_PATH=/snap/bin/docker
 BACKUP_DATE=$(date +"%Y%m%d")
