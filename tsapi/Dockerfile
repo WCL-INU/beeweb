@@ -13,6 +13,9 @@ RUN npm install
 # 소스 코드 복사
 COPY . .
 
+# mariadb-dump 설치
+RUN apt-get update && apt-get install -y mariadb-client
+
 # TypeScript 빌드
 RUN npm run build
 

@@ -27,6 +27,8 @@ services:
       DB_NAME: ${MYSQL_DATABASE}
     ports:
       - "8090:8090"
+    volumes:
+      - ./db_backup:/app/db/backup  # 호스트 ↔ 컨테이너 경로 매핑
     restart: always
 
   # data-collector:
