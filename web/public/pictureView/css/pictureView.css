@@ -25,3 +25,35 @@
     font-size: 12px;
     color: #555;
 }
+
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.4);
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+#loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    font-size: 1.2rem;
+    background: white;
+    border: 2px solid #ddd;
+    padding: 1rem 2rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}

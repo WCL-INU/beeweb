@@ -61,7 +61,12 @@
             종료: <input type="datetime-local" id="endDate">
             <button onclick="searchWithTimePeriod()">조회</button>
         </div>
-
+        <!-- 로딩 오버레이 -->
+        <div id="loading-overlay" style="display:none;"></div>
+        <!-- 로딩 인디케이터 -->
+        <div id="loading-indicator" style="display: none; text-align: center; padding: 1rem; font-weight: bold;">
+            🔄 이미지 로딩 중...
+        </div>
         <!-- 격자형 테이블 영역 -->
         <div class="grid-container" id="pictureGrid">
             <!-- 여기에 동적으로 데이터 추가 -->

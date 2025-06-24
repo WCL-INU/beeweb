@@ -3,27 +3,26 @@ let fetcher_tRange = { sTime: null, eTime: null };
 
 async function fetchPictureData() {
     try {
-        if (!fetcher_device || !fetcher_tRange.sTime || !fetcher_tRange.eTime) {
-            return;
-        }
-        
+        if (!fetcher_device || !fetcher_tRange.sTime || !fetcher_tRange.eTime) return;
+
+        document.dispatchEvent(new Event('loadingStart'));  // 로딩 시작 알림
+
         const url = `${window.BASE_PATH}api/picture?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
         const response = await fetch(url);
-        const data = await response.json();  // data는 이미 [{ device_id, time, picture: "base64…" }, …] 형태의 배열
+        const data = await response.json();
 
         const pictures = data.map(item => ({
-            // picture 필드가 Base64 문자열이므로 바로 사용
-            url:  `data:image/jpeg;base64,${item.picture}`,
+            url: `data:image/jpeg;base64,${item.picture}`,
             time: item.time.replace('T', ' ').replace('.000Z', '')
         }));
 
-        const dataUpdatedEvent = new CustomEvent('dataUpdated', { detail: pictures });
-        document.dispatchEvent(dataUpdatedEvent);
+        document.dispatchEvent(new CustomEvent('dataUpdated', { detail: pictures }));
 
     } catch (error) {
         console.error(error);
     }
 }
+
 
 // Buffer 데이터를 Base64로 변환하는 함수
 function arrayBufferToBase64(buffer) {
