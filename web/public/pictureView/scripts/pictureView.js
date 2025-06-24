@@ -9,6 +9,7 @@ function loadPictures(pictures) {
 
         const img = document.createElement('img');
         img.src = picture.url;
+        img.setAttribute('data-original', picture.url);  // Viewer.js를 위한 속성
 
         const timestamp = document.createElement('div');
         timestamp.classList.add('timestamp');
@@ -16,8 +17,30 @@ function loadPictures(pictures) {
 
         gridItem.appendChild(img);
         gridItem.appendChild(timestamp);
-
         gridContainer.appendChild(gridItem);
+    });
+
+    // Viewer.js 초기화
+    if (window.pictureViewer) {
+        window.pictureViewer.destroy();
+    }
+    window.pictureViewer = new Viewer(gridContainer, {
+        navbar: false,
+        title: true,
+        toolbar: {
+            zoomIn: 1,
+            zoomOut: 1,
+            reset: 1,
+            prev: 1,
+            play: {
+                show: 0,
+            },
+            next: 1,
+            rotateLeft: 1,
+            rotateRight: 1,
+            flipHorizontal: 1,
+            flipVertical: 1,
+        },
     });
 }
 
