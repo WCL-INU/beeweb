@@ -1,19 +1,3 @@
-
-
-// UTC 문자열을 로컬 시간 문자열로 변환
-function toLocalTimeString(utcString) {
-    const date = new Date(utcString);
-
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    const hh = String(date.getHours()).padStart(2, '0');
-    const min = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
-
-    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
-}
-
 // 격자에 데이터를 동적으로 추가하는 함수
 function loadPictures(pictures) {
     const gridContainer = document.getElementById('pictureGrid');
@@ -37,7 +21,7 @@ function loadPictures(pictures) {
 
             const timestamp = document.createElement('div');
             timestamp.classList.add('timestamp');
-            timestamp.innerText = toLocalTimeString(picture.time);
+            timestamp.innerText = picture.time;
 
             gridItem.appendChild(img);
             gridItem.appendChild(timestamp);

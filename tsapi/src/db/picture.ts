@@ -57,8 +57,6 @@ export const getPictureData = async (
       AND time BETWEEN ? AND ?
     ORDER BY time DESC
   `;
-    console.log(`Executing query: ${query} with params: [${deviceId}, ${sTime}, ${eTime}]`);
     const [rows] = await pool.execute(query, [deviceId, sTime, eTime]);
-    console.log(rows);
     return rows as PictureDataRow[];
 };

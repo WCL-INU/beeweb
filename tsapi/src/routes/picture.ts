@@ -30,11 +30,14 @@ router.get('/', async (req: Request, res: Response) => {
     try {
         const rows = await getPictureData(deviceId, sTime, eTime);
         console.log(rows);
-        const result = rows.map(r => ({
-            device_id: r.device_id,
-            time: r.time,
-            picture: r.picture.toString('base64')
-        }));
+        const result = rows.map(r => {
+        const utcDate = new Date(r.time + 'Z'); // 문자열을 UTC로 인식
+        return {
+                device_id: r.device_id,
+                time: utcDate.toISOString(), // ISO 8601 형식 (e.g. 2025-06-24T04:00:00.000Z)
+                picture: r.picture.toString('base64')
+            };
+        });
 
         if (!result.length) {
             res.status(404).json({ error: 'No picture data found' });
