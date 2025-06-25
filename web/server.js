@@ -64,6 +64,7 @@ app.use(express.json()); // JSON 요청 본문 파싱
 
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, 'public'), { redirect: false }));
+app.use('/picture', express.static('/app/db/picture'));
 
 // // Serve Chart.js from node_modules
 app.use('/chart.js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')));

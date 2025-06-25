@@ -66,9 +66,9 @@ export const initializeDatabase = async () => {
     await pool.execute(`CREATE TABLE IF NOT EXISTS picture_data (
       id INT AUTO_INCREMENT PRIMARY KEY,
       device_id INT NOT NULL,
-      picture LONGBLOB,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
+      time DATETIME NOT NULL,
+      path VARCHAR(255) NOT NULL,
+      UNIQUE KEY unique_picture (device_id, time)
     )`);
 
     await pool.execute(`CREATE TABLE IF NOT EXISTS hives (

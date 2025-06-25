@@ -1,4 +1,3 @@
-// db/picture.ts
 import { pool } from './index';
 import { PictureDataInsert, PictureDataRow } from '../types';
 
@@ -12,9 +11,11 @@ const processPictureBatch = async (
 
     const insertBatch = async () => {
         if (!batch.length) return;
+
         const placeholders = batch.map(() => '(?, ?, ?)').join(', ');
         const fullQuery = queryTemplate.replace('VALUES (?, ?, ?)', `VALUES ${placeholders}`);
-        const params = batch.flatMap(row => [row.device_id, row.time, row.picture]);
+        const params = batch.flatMap(row => [row.device_id, row.time, row.path]);
+
         await pool.query(fullQuery, params);
         total += batch.length;
         batch = [];
@@ -26,21 +27,23 @@ const processPictureBatch = async (
             await insertBatch();
         }
     }
+
     if (batch.length) {
         await insertBatch();
     }
+
     return total;
 };
 
 export const insertPictureData = async (datas: PictureDataInsert[]): Promise<void> => {
     const batchSize = 1000;
     const query = `
-    INSERT INTO picture_data (device_id, time, picture)
-    VALUES (?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      picture = VALUES(picture),
-      time    = VALUES(time)
-  `;
+        INSERT INTO picture_data (device_id, time, path)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          path = VALUES(path)
+    `;
+
     const count = await processPictureBatch(query, datas, batchSize);
     console.log(`Inserted/Updated ${count} picture records`);
 };
@@ -51,12 +54,12 @@ export const getPictureData = async (
     eTime: string
 ): Promise<PictureDataRow[]> => {
     const query = `
-    SELECT id, device_id, time, picture
-    FROM picture_data
-    WHERE device_id = ?
-      AND time BETWEEN ? AND ?
-    ORDER BY time DESC
-  `;
+        SELECT id, device_id, time, path
+        FROM picture_data
+        WHERE device_id = ?
+          AND time BETWEEN ? AND ?
+        ORDER BY time DESC
+    `;
     const [rows] = await pool.execute(query, [deviceId, sTime, eTime]);
     return rows as PictureDataRow[];
 };

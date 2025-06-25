@@ -25,10 +25,15 @@ async function fetchPictureData() {
         const response = await fetch(url);
         const data = await response.json();
 
-        const pictures = data.map(item => ({
-            url: `data:image/jpeg;base64,${item.picture}`,
-            time: toLocalTimeString(item.time)
-        }));
+        const pictures = data.map(item => {
+            const fullUrl = `${window.BASE_PATH}picture/${item.path}`;
+            const thumbUrl = fullUrl.replace(/\.jpg$/, '_thumb.jpg');
+            return {
+                fullUrl,
+                thumbUrl,
+                time: toLocalTimeString(item.time)
+            };
+        });
 
         document.dispatchEvent(new CustomEvent('dataUpdated', { detail: pictures }));
 
@@ -36,7 +41,6 @@ async function fetchPictureData() {
         console.error(error);
     }
 }
-
 
 // Buffer 데이터를 Base64로 변환하는 함수
 function arrayBufferToBase64(buffer) {

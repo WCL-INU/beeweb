@@ -1,48 +1,77 @@
-// routes/picture.ts
 import express, { Request, Response } from 'express';
 import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises';
+import sharp from 'sharp';
+
 import { getPictureData, insertPictureData } from '../db/picture';
 import { PictureDataInsert } from '../types';
 
 const router = express.Router();
 const upload = multer();
+const PICTURE_DIR = '/app/db/picture';
 
-// 모든 JSON 바디 파싱
 router.use(express.json());
 
+const saveImage = async (deviceId: number, time: string, buffer: Buffer): Promise<PictureDataInsert> => {
+    const timeObj = new Date(time);
+    const formatted = timeObj.toISOString().replace(/[-:]/g, '').slice(0, 15);
+    const filename = `${formatted}.jpg`;
+    const thumbname = `${formatted}_thumb.jpg`;
+
+    const deviceFolder = `device_${deviceId}`;
+    const devicePath = path.join(PICTURE_DIR, deviceFolder);
+    await fs.mkdir(devicePath, { recursive: true });
+
+    const fullPath = path.join(devicePath, filename);
+    const thumbPath = path.join(devicePath, thumbname);
+
+    await fs.writeFile(fullPath, buffer);
+    await sharp(buffer)
+        .resize({ width: 320 })
+        .jpeg({ quality: 80 })
+        .toFile(thumbPath);
+
+    return {
+        device_id: deviceId,
+        time: time.replace('T', ' ').replace('Z', ''),
+        path: path.join(deviceFolder, filename)
+    };
+};
+
+/* GET /api/picture */
 router.get('/', async (req: Request, res: Response) => {
     // #swagger.tags = ['Picture']
-    // #swagger.description = 'Fetch picture data by device and time range'
-    // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true }
-    // #swagger.parameters['sTime'] = { description: 'Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)', required: true }
-    // #swagger.parameters['eTime'] = { description: 'End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)', required: true }
-    const deviceId = parseInt(req.query.deviceId as string);
-    const sTime = req.query.sTime as string;
-    const eTime = req.query.eTime as string;
-    
-    console.log(req.query);
+    // #swagger.description = 'Fetch pictures for a device within a time range'
+    // #swagger.parameters['deviceId'] = { in: 'query', required: true, type: 'integer' }
+    // #swagger.parameters['sTime'] = { in: 'query', required: true, type: 'string', format: 'date-time' }
+    // #swagger.parameters['eTime'] = { in: 'query', required: true, type: 'string', format: 'date-time' }
 
-    if (!deviceId || !sTime || !eTime) {
-        res.status(400).json({ error: 'Missing required query parameters' });
+    const deviceId = parseInt(req.query.deviceId as string, 10);
+    const rawSTime = req.query.sTime as string;
+    const rawETime = req.query.eTime as string;
+
+    if (isNaN(deviceId) || !rawSTime || !rawETime) {
+        res.status(400).json({ error: 'Invalid query parameters' });
         return;
     }
 
+    const sTime = rawSTime.replace('T', ' ').replace('Z', '');
+    const eTime = rawETime.replace('T', ' ').replace('Z', '');
+
     try {
         const rows = await getPictureData(deviceId, sTime, eTime);
-        console.log(rows);
-        const result = rows.map(r => {
-        const utcDate = new Date(r.time + 'Z'); // 문자열을 UTC로 인식
-        return {
-                device_id: r.device_id,
-                time: utcDate.toISOString(), // ISO 8601 형식 (e.g. 2025-06-24T04:00:00.000Z)
-                picture: r.picture.toString('base64')
-            };
-        });
-
-        if (!result.length) {
+        if (!rows.length) {
             res.status(404).json({ error: 'No picture data found' });
             return;
         }
+
+        const result = rows.map(r => ({
+            device_id: r.device_id,
+            time: new Date(r.time + 'Z').toISOString(),
+            path: r.path
+        }));
+
         res.status(200).json(result);
     } catch (err) {
         console.error('GET /api/picture error:', err);
@@ -50,71 +79,85 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
-/**
- * POST /api/picture/upload
- * Supports:
- *   • multipart/form-data:
- *       fields: file1, file2, … (binary)
- *       metadata: file1_id, file1_time, …
- *   • application/json:
- *       { data: [ { device_id, time?, picture: base64 }, … ] }
- *
- * #swagger.tags = ['Picture']
- * #swagger.description = 'Upload one or more pictures (multipart or JSON)' 
- */
+/* POST /api/picture/upload */
 router.post('/upload', upload.any(), async (req: Request, res: Response) => {
-    try {
-        let rows = [] as {
-            device_id: number;
-            time: string;
-            picture: Buffer;
-        }[];
+    // #swagger.tags = ['Picture']
+    // #swagger.description = 'Upload one or more pictures (JSON or multipart/form-data)'
+    // #swagger.requestBody = {
+    //   content: {
+    //     "application/json": {
+    //       schema: {
+    //         type: "object",
+    //         properties: {
+    //           data: {
+    //             type: "array",
+    //             items: {
+    //               type: "object",
+    //               properties: {
+    //                 device_id: { type: "integer" },
+    //                 time: { type: "string", format: "date-time" },
+    //                 picture: { type: "string", format: "base64" }
+    //               }
+    //             }
+    //           }
+    //         }
+    //       }
+    //     },
+    //     "multipart/form-data": {
+    //       schema: {
+    //         type: "object",
+    //         properties: {
+    //           file1: { type: "string", format: "binary" },
+    //           file1_id: { type: "integer" },
+    //           file1_time: { type: "string", format: "date-time" }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+    // #swagger.responses[201] = { description: 'Upload successful' }
+    // #swagger.responses[400] = { description: 'Bad request' }
 
-        // 1) multipart/form-data 처리
+    try {
+        const toInsert: PictureDataInsert[] = [];
+
         if (req.is('multipart/form-data')) {
             const files = req.files as Express.Multer.File[];
-            const pics = files.filter(f => f.fieldname.startsWith('file'));
+            for (let i = 0; i < files.length; i++) {
+                const buffer = files[i].buffer;
+                const idField = req.body[`file${i + 1}_id`];
+                const timeField = req.body[`file${i + 1}_time`];
 
-            const meta = pics.map((file, i) => ({
-                id: req.body[`file${i + 1}_id`],
-                time: req.body[`file${i + 1}_time`],
-                buf: file.buffer
-            }));
-            if (!meta.length || meta.some(m => !m.id || !m.time)) {
-                res.status(400).send('Bad Request: Missing required fields or data');
-                return;
+                if (!idField || !timeField) {
+                    res.status(400).send('Missing metadata for file upload');
+                    return;
+                }
+
+                const deviceId = parseInt(idField, 10);
+                const meta = await saveImage(deviceId, timeField, buffer);
+                toInsert.push(meta);
             }
-
-            rows = meta.map(m => ({
-                device_id: parseInt(m.id, 10),
-                time: m.time.replace('T', ' ').replace('Z', ''),
-                picture: m.buf
-            }));
-        }
-        // 2) JSON payload 처리
-        else if (req.is('application/json')) {
+        } else if (req.is('application/json')) {
             const body = req.body;
-            if (!Array.isArray(body.data) || !body.data.length) {
-                res.status(400).send('Bad Request: Missing required fields or data');
+            if (!Array.isArray(body.data)) {
+                res.status(400).send('Missing "data" array');
                 return;
             }
-            rows = body.data.map((item: any) => ({
-                device_id: item.device_id,
-                time: (item.time as string)?.replace('T', ' ').replace('Z', '')
-                    ?? new Date().toISOString().slice(0, 19).replace('T', ' '),
-                picture: Buffer.from(item.picture, 'base64')
-            }));
-        }
-        else {
-            res.status(400).send('Bad Request: Unsupported content type');
+
+            for (const item of body.data) {
+                const deviceId = item.device_id;
+                const time = item.time ?? new Date().toISOString();
+                const buffer = Buffer.from(item.picture, 'base64');
+                const meta = await saveImage(deviceId, time, buffer);
+                toInsert.push(meta);
+            }
+        } else {
+            res.status(400).send('Unsupported Content-Type');
             return;
         }
 
-        // DB에 삽입
-        const toInsert: PictureDataInsert[] = rows;
         await insertPictureData(toInsert);
-
-        res.status(201).json({ message: 'Picture data uploaded successfully' });
+        res.status(201).json({ message: 'Pictures uploaded successfully' });
     } catch (err) {
         console.error('POST /api/picture/upload error:', err);
         res.status(500).json({ error: 'Internal Server Error' });

@@ -13,8 +13,8 @@ function loadPictures(pictures) {
             gridItem.classList.add('grid-item');
 
             const img = document.createElement('img');
-            img.src = picture.url;
-            img.setAttribute('data-original', picture.url);
+            img.src = picture.thumbUrl; // ✅ 썸네일로 보이기
+            img.setAttribute('data-original', picture.fullUrl); // ✅ Viewer가 원본 이미지 로딩
 
             img.onload = () => resolve();  // 개별 이미지 로딩 완료
             img.onerror = () => resolve(); // 실패해도 그냥 resolve
@@ -37,24 +37,27 @@ function loadPictures(pictures) {
             window.pictureViewer = null;
         }
 
-        window.pictureViewer = new Viewer(gridContainer,{
+        window.pictureViewer = new Viewer(gridContainer, {
             inline: false,
             button: true,
             navbar: false,
             title: true,
             movable: false,
             toolbar: {
-                zoomIn: 1,         // 확대
-                zoomOut: 1,        // 축소
-                oneToOne: 0,       // 원본 크기
-                reset: 1,          // 초기 상태로 복원
-                prev: 1,           // 이전 이미지
-                play: { show: 0 }, // 슬라이드쇼 (0 = 숨김)
-                next: 1,           // 다음 이미지
-                rotateLeft: 1,     // 왼쪽으로 회전
-                rotateRight: 1,    // 오른쪽으로 회전
-                flipHorizontal: 0, // 수평 뒤집기
-                flipVertical: 0    // 수직 뒤집기
+                zoomIn: 1,  // 확대 버튼
+                zoomOut: 1, // 축소 버튼
+                oneToOne: 0,    // 원본 크기로 보기 버튼
+                reset: 1,   // 초기화 버튼
+                prev: 1,    // 이전 이미지 버튼
+                play: { show: 0 },  // 슬라이드 쇼 버튼 숨김
+                next: 1,    // 다음 이미지 버튼
+                rotateLeft: 1,  // 왼쪽으로 회전 버튼
+                rotateRight: 1, // 오른쪽으로 회전 버튼
+                flipHorizontal: 0,  // 수평 뒤집기 버튼 숨김
+                flipVertical: 0 // 수직 뒤집기 버튼 숨김
+            },
+            url(image) {
+                return image.dataset.original; // 👈 원본 경로를 지정
             }
         });
     });
