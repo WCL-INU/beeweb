@@ -115,9 +115,9 @@ export const initializeDatabase = async () => {
       ('admin', 'A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=', 1)
       ON DUPLICATE KEY UPDATE pw = VALUES(pw), grade = VALUES(grade)`);
 
-    await addConstraintIfNotExists('inout_data', 'fk_inout_device', `ALTER TABLE inout_data ADD CONSTRAINT fk_inout_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
-    await addConstraintIfNotExists('sensor_data', 'fk_sensor_device', `ALTER TABLE sensor_data ADD CONSTRAINT fk_sensor_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
-    await addConstraintIfNotExists('camera_data', 'fk_camera_device', `ALTER TABLE camera_data ADD CONSTRAINT fk_camera_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
+    // await addConstraintIfNotExists('inout_data', 'fk_inout_device', `ALTER TABLE inout_data ADD CONSTRAINT fk_inout_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
+    // await addConstraintIfNotExists('sensor_data', 'fk_sensor_device', `ALTER TABLE sensor_data ADD CONSTRAINT fk_sensor_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
+    // await addConstraintIfNotExists('camera_data', 'fk_camera_device', `ALTER TABLE camera_data ADD CONSTRAINT fk_camera_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_device', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_data_type', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_data_type FOREIGN KEY (data_type) REFERENCES data_types(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('picture_data', 'fk_picture_device', `ALTER TABLE picture_data ADD CONSTRAINT fk_picture_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
