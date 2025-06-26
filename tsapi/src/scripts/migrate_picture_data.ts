@@ -21,8 +21,8 @@ const migrate = async () => {
     for (const row of rows) {
         const timeObj = new Date(row.time);
         const formatted = timeObj.toISOString().replace(/[-:]/g, '').slice(0, 15); // YYYYMMDDTHHMMSS
-        const filename = `${formatted}.jpg`;
-        const thumbname = `${formatted}_thumb.jpg`;
+        const filename = `${formatted}Z.jpg`; // ✅ Z 붙이기
+        const thumbname = `${formatted}Z_thumb.jpg`; // ✅ 썸네일도 동일
 
         const deviceFolder = `device_${row.device_id}`;
         const devicePath = path.join(OUTPUT_DIR, deviceFolder);
