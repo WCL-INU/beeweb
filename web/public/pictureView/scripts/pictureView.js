@@ -6,6 +6,8 @@ function loadPictures(pictures) {
     gridContainer.innerHTML = "";
     loadingIndicator.style.display = "block";  // 로딩 시작
 
+    pictures.sort((a, b) => new Date(a.time) - new Date(b.time));
+    
     // 모든 이미지가 로딩 완료될 때까지 기다림
     const imagePromises = pictures.map(picture => {
         return new Promise(resolve => {

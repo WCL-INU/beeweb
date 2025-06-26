@@ -13,28 +13,40 @@ const PICTURE_DIR = '/app/db/picture';
 
 router.use(express.json());
 
+const parseToUTC = (time: string): Date => {
+    return time.endsWith('Z')
+        ? new Date(time) // UTC 입력
+        : new Date(time + getLocalOffset()); // 로컬 입력 → UTC로 변환
+};
+
+function getLocalOffset(): string {
+    const offset = new Date().getTimezoneOffset(); // 분 단위
+    const abs = Math.abs(offset);
+    const sign = offset <= 0 ? '+' : '-';
+    const hh = String(Math.floor(abs / 60)).padStart(2, '0');
+    const mm = String(abs % 60).padStart(2, '0');
+    return `${sign}${hh}:${mm}`;
+}
+
 const saveImage = async (deviceId: number, time: string, buffer: Buffer): Promise<PictureDataInsert> => {
-    const timeObj = new Date(time);
-    const formatted = timeObj.toISOString().replace(/[-:]/g, '').slice(0, 15);
-    const filename = `${formatted}.jpg`;
-    const thumbname = `${formatted}_thumb.jpg`;
+    const timeObj = parseToUTC(time); // ✅ 항상 UTC Date로 변환
+    const formatted = timeObj.toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
+    const filename = `${formatted}Z.jpg`;
+    const thumbname = `${formatted}Z_thumb.jpg`;
 
     const deviceFolder = `device_${deviceId}`;
     const devicePath = path.join(PICTURE_DIR, deviceFolder);
     await fs.mkdir(devicePath, { recursive: true });
 
-    const fullPath = path.join(devicePath, filename);
-    const thumbPath = path.join(devicePath, thumbname);
-
-    await fs.writeFile(fullPath, buffer);
+    await fs.writeFile(path.join(devicePath, filename), buffer);
     await sharp(buffer)
         .resize({ width: 320 })
         .jpeg({ quality: 80 })
-        .toFile(thumbPath);
+        .toFile(path.join(devicePath, thumbname));
 
     return {
         device_id: deviceId,
-        time: time.replace('T', ' ').replace('Z', ''),
+        time: timeObj.toISOString().replace('T', ' ').replace('Z', ''), // DB 저장: UTC, Z 제거된 포맷
         path: path.join(deviceFolder, filename)
     };
 };

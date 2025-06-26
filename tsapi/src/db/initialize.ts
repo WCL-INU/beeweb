@@ -16,33 +16,33 @@ export const initializeDatabase = async () => {
     await pool.execute(`CREATE DATABASE IF NOT EXISTS hive_data`);
     await pool.execute(`USE hive_data`);
 
-    await pool.execute(`CREATE TABLE IF NOT EXISTS inout_data (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      device_id INT NOT NULL,
-      in_field INT,
-      out_field INT,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
-    )`);
+    // await pool.execute(`CREATE TABLE IF NOT EXISTS inout_data (
+    //   id INT AUTO_INCREMENT PRIMARY KEY,
+    //   device_id INT NOT NULL,
+    //   in_field INT,
+    //   out_field INT,
+    //   time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    //   UNIQUE KEY unique_device_time (device_id, time)
+    // )`);
 
-    await pool.execute(`CREATE TABLE IF NOT EXISTS sensor_data (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      device_id INT NOT NULL,
-      temp FLOAT,
-      humi FLOAT,
-      co2 FLOAT,
-      weigh FLOAT,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
-    )`);
+    // await pool.execute(`CREATE TABLE IF NOT EXISTS sensor_data (
+    //   id INT AUTO_INCREMENT PRIMARY KEY,
+    //   device_id INT NOT NULL,
+    //   temp FLOAT,
+    //   humi FLOAT,
+    //   co2 FLOAT,
+    //   weigh FLOAT,
+    //   time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    //   UNIQUE KEY unique_device_time (device_id, time)
+    // )`);
 
-    await pool.execute(`CREATE TABLE IF NOT EXISTS camera_data (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      device_id INT NOT NULL,
-      picture LONGBLOB,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
-    )`);
+    // await pool.execute(`CREATE TABLE IF NOT EXISTS camera_data (
+    //   id INT AUTO_INCREMENT PRIMARY KEY,
+    //   device_id INT NOT NULL,
+    //   picture LONGBLOB,
+    //   time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    //   UNIQUE KEY unique_device_time (device_id, time)
+    // )`);
 
     await pool.execute(`CREATE TABLE IF NOT EXISTS data_types (
       id INT AUTO_INCREMENT PRIMARY KEY,
