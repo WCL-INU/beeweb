@@ -31,9 +31,8 @@ function loadPictures(pictures) {
         });
     });
 
-    Promise.all(imagePromises).then(() => {
-        document.dispatchEvent(new Event('loadingEnd'));  // 로딩 종료 알림
-
+    Promise.all(imagePromises)
+    .then(() => {
         if (window.pictureViewer) {
             window.pictureViewer.destroy();
             window.pictureViewer = null;
@@ -46,22 +45,28 @@ function loadPictures(pictures) {
             title: true,
             movable: false,
             toolbar: {
-                zoomIn: 1,  // 확대 버튼
-                zoomOut: 1, // 축소 버튼
-                oneToOne: 0,    // 원본 크기로 보기 버튼
-                reset: 1,   // 초기화 버튼
-                prev: 1,    // 이전 이미지 버튼
-                play: { show: 0 },  // 슬라이드 쇼 버튼 숨김
-                next: 1,    // 다음 이미지 버튼
-                rotateLeft: 1,  // 왼쪽으로 회전 버튼
-                rotateRight: 1, // 오른쪽으로 회전 버튼
-                flipHorizontal: 0,  // 수평 뒤집기 버튼 숨김
-                flipVertical: 0 // 수직 뒤집기 버튼 숨김
+                zoomIn: 1,
+                zoomOut: 1,
+                oneToOne: 0,
+                reset: 1,
+                prev: 1,
+                play: { show: 0 },
+                next: 1,
+                rotateLeft: 1,
+                rotateRight: 1,
+                flipHorizontal: 0,
+                flipVertical: 0
             },
             url(image) {
-                return image.dataset.original; // 👈 원본 경로를 지정
+                return image.dataset.original;
             }
         });
+    })
+    .catch(error => {
+        console.error('이미지 로딩 중 에러 발생:', error);
+    })
+    .finally(() => {
+        document.dispatchEvent(new Event('loadingEnd')); // ✅ 로딩 종료 알림은 무조건 실행
     });
 }
 

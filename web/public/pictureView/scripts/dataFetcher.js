@@ -23,6 +23,13 @@ async function fetchPictureData() {
 
         const url = `${window.BASE_PATH}api/picture?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
         const response = await fetch(url);
+
+        if (!response.ok) {
+            console.warn(`Fetch 실패: HTTP ${response.status}`);
+            document.dispatchEvent(new CustomEvent('dataUpdated', { detail: [] }));
+            return;
+        }
+
         const data = await response.json();
 
         const pictures = data.map(item => {
@@ -38,9 +45,12 @@ async function fetchPictureData() {
         document.dispatchEvent(new CustomEvent('dataUpdated', { detail: pictures }));
 
     } catch (error) {
-        console.error(error);
+        console.error('fetchPictureData 에러:', error);
+        // 네트워크 에러나 JSON 파싱 에러 등도 빈 배열로 대응
+        document.dispatchEvent(new CustomEvent('dataUpdated', { detail: [] }));
     }
 }
+
 
 // Buffer 데이터를 Base64로 변환하는 함수
 function arrayBufferToBase64(buffer) {
