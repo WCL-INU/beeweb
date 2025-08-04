@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
 import sharp from 'sharp';
+import exifr from 'exifr';
 
 import { getPictureData, insertPictureData } from '../db/picture';
 import { PictureDataInsert } from '../types';
@@ -13,41 +14,47 @@ const PICTURE_DIR = '/app/db/picture';
 
 router.use(express.json());
 
-const parseToUTC = (time: string): Date => {
-    return time.endsWith('Z')
-        ? new Date(time) // UTC 입력
-        : new Date(time + getLocalOffset()); // 로컬 입력 → UTC로 변환
+const extractExifTime = async (buffer: Buffer): Promise<Date | null> => {
+    try {
+        const exif = await exifr.parse(buffer, { tiff: true, ifd0: true });
+        if (exif?.DateTimeOriginal instanceof Date) {
+            return exif.DateTimeOriginal;
+        }
+    } catch (e) {
+        console.warn('EXIF read failed:', e);
+    }
+    return null;
 };
 
-function getLocalOffset(): string {
-    const offset = new Date().getTimezoneOffset(); // 분 단위
-    const abs = Math.abs(offset);
-    const sign = offset <= 0 ? '+' : '-';
-    const hh = String(Math.floor(abs / 60)).padStart(2, '0');
-    const mm = String(abs % 60).padStart(2, '0');
-    return `${sign}${hh}:${mm}`;
-}
+const saveImage = async (deviceId: number, fallbackTime: string, buffer: Buffer): Promise<PictureDataInsert> => {
+    const exifTimeRaw = await extractExifTime(buffer);
 
-const saveImage = async (deviceId: number, time: string, buffer: Buffer): Promise<PictureDataInsert> => {
-    const timeObj = parseToUTC(time); // ✅ 항상 UTC Date로 변환
+    let timeObj: Date;
+    if (exifTimeRaw) {
+        timeObj = exifTimeRaw;
+    } else {
+        // fallbackTime을 기반으로 ISO 8601 문자열로 파싱
+        const datePart = fallbackTime.slice(0, 10).replace(/:/g, '-');
+        const timePart = fallbackTime.slice(11);
+        const parsedDateStr = `${datePart}T${timePart}+09:00`;
+        timeObj = new Date(parsedDateStr);
+    }
+
     const formatted = timeObj.toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
-    const filename = `${formatted}Z.jpg`;
-    const thumbname = `${formatted}Z_thumb.jpg`;
+    const finalFilename = `${formatted}Z.jpg`;
+    const finalThumb = `${formatted}Z_thumb.jpg`;
 
     const deviceFolder = `device_${deviceId}`;
-    const devicePath = path.join(PICTURE_DIR, deviceFolder);
-    await fs.mkdir(devicePath, { recursive: true });
+    const deviceDir = path.join(PICTURE_DIR, deviceFolder);
+    await fs.mkdir(deviceDir, { recursive: true });
 
-    await fs.writeFile(path.join(devicePath, filename), buffer);
-    await sharp(buffer)
-        .resize({ width: 320 })
-        .jpeg({ quality: 80 })
-        .toFile(path.join(devicePath, thumbname));
+    await fs.writeFile(path.join(deviceDir, finalFilename), buffer);
+    await sharp(buffer).resize({ width: 320 }).jpeg({ quality: 80 }).toFile(path.join(deviceDir, finalThumb));
 
     return {
         device_id: deviceId,
-        time: timeObj.toISOString().replace('T', ' ').replace('Z', ''), // DB 저장: UTC, Z 제거된 포맷
-        path: path.join(deviceFolder, filename)
+        time: timeObj.toISOString().replace('T', ' ').replace('Z', ''),
+        path: path.join(deviceFolder, finalFilename),
     };
 };
 
@@ -81,7 +88,7 @@ router.get('/', async (req: Request, res: Response) => {
         const result = rows.map(r => ({
             device_id: r.device_id,
             time: new Date(r.time + 'Z').toISOString(),
-            path: r.path
+            path: r.path,
         }));
 
         res.status(200).json(result);

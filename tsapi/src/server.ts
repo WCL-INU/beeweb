@@ -10,6 +10,7 @@ import dataRoutes from './routes/data';
 import pictureRoutes from './routes/picture';
 import { initializeDatabase } from './db/initialize';
 import { backupDatabase } from './db/backup';
+import { migratePictureData } from './db/migration';
 
 const app = express();
 const PORT = 8090;
@@ -32,7 +33,15 @@ setInterval(() => {
 }, 60 * 1000); // 1분마다 확인
 
 // Swagger setup
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/docs', async (req: Request, res: Response) => {
+  try {
+    await migratePictureData(); // DB 마이그레이션 실행
+    res.status(200).send(swaggerUi.generateHTML(swaggerDocument));
+  } catch (error) {
+    console.error('Error running migration:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 // API endpoint
 app.get('/hello', (req: Request, res: Response) => {
@@ -42,6 +51,8 @@ app.get('/backup', (req: Request, res: Response) => {
   backupDatabase();
   res.json({ message: 'Backup initiated' });
 });
+
+
 
 // Device routes
 app.use('/', legacyRoutes);
