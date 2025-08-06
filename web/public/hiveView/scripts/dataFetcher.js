@@ -172,7 +172,8 @@ function getLatestData(dataList, type) {
     let latest = null;
 
     for (const item of filtered) {
-        const latestEntry = item.data[0]; // 시간 내림차순으로 정렬되어 있다고 가정
+        if (!item.data || item.data.length === 0) continue; // 💡 추가
+        const latestEntry = item.data[0];
         if (!latest || new Date(latestEntry.time) > new Date(latest.time)) {
             latest = latestEntry;
         }
