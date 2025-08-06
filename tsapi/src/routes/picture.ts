@@ -3,10 +3,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
 import sharp from 'sharp';
-import exifr from 'exifr';
 
 import { getPictureData, insertPictureData } from '../db/picture';
 import { PictureDataInsert } from '../types';
+
+const ExifTool = require('node-exiftool');
+const exiftoolBin = require('dist-exiftool');
+const ep = new ExifTool.ExiftoolProcess(exiftoolBin);
 
 const router = express.Router();
 const upload = multer();
@@ -14,11 +17,18 @@ const PICTURE_DIR = '/app/db/picture';
 
 router.use(express.json());
 
-const extractExifTime = async (buffer: Buffer): Promise<Date | null> => {
+ep.open();
+
+const extractExifTime = async (filePath: string): Promise<Date | null> => {
     try {
-        const exif = await exifr.parse(buffer, { tiff: true, ifd0: true });
-        if (exif?.DateTimeOriginal instanceof Date) {
-            return exif.DateTimeOriginal;
+        const { data } = await ep.readMetadata(filePath);
+        const meta = data[0] || {};
+        const exifRaw = meta.DateTimeOriginal;
+        if (typeof exifRaw === 'string') {
+            const datePart = exifRaw.slice(0, 10).replace(/:/g, '-');
+            const timePart = exifRaw.slice(11);
+            const parsed = `${datePart}T${timePart}+09:00`;
+            return new Date(parsed);
         }
     } catch (e) {
         console.warn('EXIF read failed:', e);
@@ -27,13 +37,21 @@ const extractExifTime = async (buffer: Buffer): Promise<Date | null> => {
 };
 
 const saveImage = async (deviceId: number, fallbackTime: string, buffer: Buffer): Promise<PictureDataInsert> => {
-    const exifTimeRaw = await extractExifTime(buffer);
+    const deviceFolder = `device_${deviceId}`;
+    const deviceDir = path.join(PICTURE_DIR, deviceFolder);
+    await fs.mkdir(deviceDir, { recursive: true });
+
+    const timestamp = Date.now();
+    const tempFilename = `temp_${timestamp}.jpg`;
+    const tempPath = path.join(deviceDir, tempFilename);
+    await fs.writeFile(tempPath, buffer);
+
+    const exifTimeRaw = await extractExifTime(tempPath);
 
     let timeObj: Date;
     if (exifTimeRaw) {
         timeObj = exifTimeRaw;
     } else {
-        // fallbackTime을 기반으로 ISO 8601 문자열로 파싱
         const datePart = fallbackTime.slice(0, 10).replace(/:/g, '-');
         const timePart = fallbackTime.slice(11);
         const parsedDateStr = `${datePart}T${timePart}+09:00`;
@@ -44,12 +62,15 @@ const saveImage = async (deviceId: number, fallbackTime: string, buffer: Buffer)
     const finalFilename = `${formatted}Z.jpg`;
     const finalThumb = `${formatted}Z_thumb.jpg`;
 
-    const deviceFolder = `device_${deviceId}`;
-    const deviceDir = path.join(PICTURE_DIR, deviceFolder);
-    await fs.mkdir(deviceDir, { recursive: true });
+    const finalPath = path.join(deviceDir, finalFilename);
+    const thumbPath = path.join(deviceDir, finalThumb);
 
-    await fs.writeFile(path.join(deviceDir, finalFilename), buffer);
-    await sharp(buffer).resize({ width: 320 }).jpeg({ quality: 80 }).toFile(path.join(deviceDir, finalThumb));
+    await fs.rename(tempPath, finalPath);
+
+    await sharp(buffer)
+        .resize({ width: 320 })
+        .jpeg({ quality: 80 })
+        .toFile(thumbPath);
 
     return {
         device_id: deviceId,
