@@ -2,41 +2,13 @@ let fetcher_deviceList = [];
 let fetcher_tRange = {sTime: null, eTime: null};
 let fetcher_dataList = [];
 
-// async function fetchInOutData(deviceId, sTime, eTime) {
-//     const url = `${window.BASE_PATH}api/inout?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
-//     const response = await fetch(url);
-
-//     if (!response.ok) {
-//         console.warn(`No InOut data for device ${deviceId} (status: ${response.status})`);
-//         return [];  // 데이터 없음 처리
-//     }
-
-//     const data = await response.json();
-//     console.log(`Data received for device ${deviceId}:`, data);
-//     return data;
-// }
-
-// async function fetchSensorData(deviceId, sTime, eTime) {
-//     const url = `${window.BASE_PATH}api/sensor?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}`;
-//     const response = await fetch(url);
-
-//     if (!response.ok) {
-//         console.warn(`No Sensor data for device ${deviceId} (status: ${response.status})`);
-//         return [];  // 데이터 없음 처리
-//     }
-
-//     const data = await response.json();
-//     console.log(`Data received for device ${deviceId}:`, data);
-//     return data;
-// }
-
 async function fetchSensor2Data(deviceId, sTime, eTime, dataTypes) {
     const typeStr = dataTypes.join(',');
     const url = `${window.BASE_PATH}api/data/sensor2?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}&dataTypes=${typeStr}`;
     const response = await fetch(url);
 
     if (!response.ok) {
-        console.warn(`No data for device ${deviceId} (status: ${response.status})`);
+        console.warn(`[DataFetcher] No data for device ${deviceId} (status: ${response.status})`);
         return [];
     }
 

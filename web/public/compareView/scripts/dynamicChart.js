@@ -245,7 +245,7 @@ function initializeSlider(chartBlock, min, max, updateCallback) {
 
         // 반환된 값을 소수점 첫째 자리까지만 표시
         const roundedValues = values.map(value => parseFloat(value).toFixed(1));
-        console.log(`Slider values min: ${roundedValues[0]}, max: ${roundedValues[1]}`);
+        console.log(`[DynamicChart] Slider values min: ${roundedValues[0]}, max: ${roundedValues[1]}`);
         updateCallback(roundedValues);
     });
 }
@@ -261,7 +261,7 @@ function getValueRangeFromDatas(datas) {
             minValue = Math.min(...dataValues);
         }
     }
-    console.log(`maxValue: ${maxValue}, minValue: ${minValue}`);
+    console.log(`[DynamicChart] maxValue: ${maxValue}, minValue: ${minValue}`);
     return { minValue, maxValue };
 }
 
@@ -284,7 +284,7 @@ function getTimeRangeFromURL() {
       const sTimeDate = new Date(sTime);
       const eTimeDate = new Date(eTime);
 
-      console.log(`sTimeDate: ${sTimeDate}, eTimeDate: ${eTimeDate}`);
+      console.log(`[DynamicChart] sTimeDate: ${sTimeDate}, eTimeDate: ${eTimeDate}`);
     return { sTimeDate, eTimeDate };
 }
 
@@ -302,7 +302,7 @@ function updateChartData(chartBlock, minValue, maxValue) {
     const canvas = chartBlock.querySelector('canvas');
     const ctx = canvas.getContext('2d');
     const id = chartBlock.id;
-    console.log('Updating chart with options:', options);
+    console.log(`[DynamicChart] Updating chart with options:`, options);
 
     const datas = chart_datas.filter(data => options.includes(String(data.device.id)));
     // 시간 획득
@@ -436,7 +436,7 @@ async function fetchAndRenderCharts() {
 // ================== 이벤트 리스너 ==================
 // 디바이스 로드 완료 시
 document.addEventListener('dataUpdated', (event) => {
-    console.log('dataLoaded:', event.detail);
+    console.log('[DynamicChart] dataLoaded:', event.detail);
     chart_datas = event.detail;
 
     // URL 파라미터로부터 차트 렌더링

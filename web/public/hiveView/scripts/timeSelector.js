@@ -79,7 +79,7 @@ function searchWithTimePeriod() {
         const updateEvent = new CustomEvent('timeRangeUpdated', { detail: { sTime: sTimeUTC, eTime: eTimeUTC } });
         document.dispatchEvent(updateEvent);
     } else {
-        console.warn('[searchWithTimePeriod] Invalid date input');
+        console.warn(`[TimeSelector] Invalid date input`);
     }
 }
 
@@ -96,11 +96,11 @@ function getPresetRange(period) {
             startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
             break;
         case 'month':
-            startDate = new Date(endDate); // 복사
+            startDate = new Date(endDate);
             startDate.setMonth(endDate.getMonth() - 1);
             break;
         default:
-            console.warn(`[setPreset] Unknown period: ${period}`);
+            console.warn(`[TimeSelector] Unknown period: ${period}`);
             return null;
     }
 
