@@ -9,7 +9,7 @@ const USER = process.env.DB_USER || 'user';
 const PASSWORD = process.env.DB_PASSWORD || 'password';
 const DATABASE = process.env.DB_NAME || 'mydb';
 
-const MAX_BACKUPS = 14;
+const MAX_BACKUPS = 3; // 보관할 최대 백업 개수
 
 export function backupDatabase() {
     const today = new Date().toISOString().slice(0, 10);
