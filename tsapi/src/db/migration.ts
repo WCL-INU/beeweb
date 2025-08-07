@@ -1,158 +1,132 @@
-import fs from 'fs/promises';
-import path from 'path';
-import sharp from 'sharp';
-import { RowDataPacket } from 'mysql2';
-import { pool } from './index'; // DB 연결
+import { pool } from './index';
 
-const PICTURE_DIR = '/app/db/picture';
-
-const ExifTool = require('node-exiftool');
-const exiftoolBin = require('dist-exiftool');
-const ep = new ExifTool.ExiftoolProcess(exiftoolBin);
-
-async function clearDirectory(dir: string): Promise<void> {
-    try {
-        const entries = await fs.readdir(dir, { withFileTypes: true });
-
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
-            if (entry.isDirectory()) {
-                await clearDirectory(fullPath);
-                await fs.rmdir(fullPath);
-            } else {
-                await fs.unlink(fullPath);
-            }
-        }
-
-        console.log(`✅ '${dir}' 내부 파일 삭제 완료`);
-    } catch (err) {
-        console.error(`❌ '${dir}' 내부 파일 삭제 실패:`, err);
-        throw err;
+async function addIndexIfNotExists(table: string, indexName: string, sql: string) {
+    const [rows] = await pool.query(
+        `SELECT INDEX_NAME FROM information_schema.STATISTICS WHERE TABLE_NAME = ? AND INDEX_NAME = ?`,
+        [table, indexName]
+    );
+    if ((rows as any[]).length === 0) {
+        await pool.execute(sql);
+        console.log(`✅ 인덱스 추가됨: ${indexName} ON ${table}`);
+    } else {
+        console.log(`ℹ️ 인덱스 이미 존재함: ${indexName} ON ${table}`);
     }
 }
 
-export async function migratePictureData() {
-    console.log('📦 picture_data 테이블 마이그레이션 시작');
+// ✅ 보정 수식 정의
+function specificCalcIN(val: number): number {
+    return Math.round(val * 1.1); // 예시
+}
 
-    // 1. path 컬럼 존재 확인 및 추가
-    const [columns] = await pool.query<RowDataPacket[]>(
-        `SHOW COLUMNS FROM picture_data LIKE 'path'`
+function specificCalcOUT(val: number): number {
+    return Math.round(val + 3); // 예시
+}
+
+// ✅ _CORR 디바이스 생성 또는 가져오기
+async function createOrGetCorrectedDevice(deviceId: number): Promise<number> {
+    const [rows] = await pool.query(`SELECT * FROM devices WHERE id = ?`, [deviceId]) as [any[], any];
+    if (rows.length === 0) throw new Error('Original device not found');
+
+    const original = rows[0];
+    const correctedName = original.name + '_CORR';
+
+    const [existing] = await pool.query(
+        `SELECT * FROM devices WHERE hive_id = ? AND name = ?`,
+        [original.hive_id, correctedName]
     );
-    if (columns.length === 0) {
-        console.log('🛠 path 컬럼이 없어 추가 중...');
-        await pool.execute(`ALTER TABLE picture_data ADD COLUMN path VARCHAR(255)`);
-    }
+    if ((existing as any[]).length > 0) return (existing as any)[0].id;
 
-    // 2. 기존 path 컬럼 초기화 + 파일 디렉토리 삭제
-    try {
-        console.log('🧹 기존 path 초기화 및 파일 삭제 중...');
-        await pool.execute(`UPDATE picture_data SET path = NULL`);
-        await clearDirectory(PICTURE_DIR);
-        await fs.mkdir(PICTURE_DIR, { recursive: true });
-        console.log('✅ 초기화 완료');
-    } catch (err) {
-        console.error('❌ 초기화 중 오류 발생:', err);
-        return;
-    }
+    const [result]: any = await pool.execute(
+        `INSERT INTO devices (hive_id, type_id, name) VALUES (?, ?, ?)`,
+        [original.hive_id, original.type_id, correctedName]
+    );
+    return result.insertId;
+}
 
-    const BATCH_SIZE = 50;
+// ✅ 보정값 삽입 (data_type은 그대로 유지)
+async function insertCorrectedData(originalId: number, correctedId: number) {
+    const [rows] = await pool.query(`
+        SELECT data_type, data_int, data_float, time
+        FROM sensor_data2
+        WHERE device_id = ? AND data_type IN (2, 3)
+    `, [originalId]);
+
+    for (const row of rows as any[]) {
+        const value = row.data_int ?? row.data_float;
+        const correctedType = row.data_type;
+
+        let correctedVal: number;
+        if (correctedType === 2) {
+            correctedVal = specificCalcIN(value);
+        } else if (correctedType === 3) {
+            correctedVal = specificCalcOUT(value);
+        } else {
+            continue;
+        }
+
+        await pool.execute(
+            `INSERT IGNORE INTO sensor_data2 (device_id, data_int, data_type, time)
+             VALUES (?, ?, ?, ?)`,
+            [correctedId, correctedVal, correctedType, row.time]
+        );
+    }
+}
+
+// ✅ 배치 단위로 device_id 조회
+async function getDeviceIdsBatch(afterId: number, limit: number): Promise<number[]> {
+    const [rows] = await pool.query(`
+        SELECT DISTINCT device_id
+        FROM sensor_data2
+        WHERE data_type IN (2, 3) AND device_id > ?
+        ORDER BY device_id
+        LIMIT ?
+    `, [afterId, limit]);
+
+    return (rows as any[]).map(row => row.device_id);
+}
+
+// ✅ 전체 루프
+export async function processAllDevicesInBatches(batchSize: number = 100) {
+    await addIndexIfNotExists(
+        'sensor_data2',
+        'idx_sensor_device_type_time',
+        'CREATE INDEX idx_sensor_device_type_time ON sensor_data2(device_id, data_type, time)'
+    );
+
     let lastId = 0;
-    let total = 0;
-    const noExifList: { id: number; device_id: number; rawExif?: any }[] = [];
-
-    await ep.open();
+    let processedCount = 0;
+    let batchNumber = 1;
+    const startedAt = Date.now();
 
     while (true) {
-        const [rows] = await pool.query<RowDataPacket[]>(
-            `SELECT id, device_id, picture, time
-             FROM picture_data
-             WHERE id > ? AND picture IS NOT NULL
-             ORDER BY id ASC
-             LIMIT ?`,
-            [lastId, BATCH_SIZE]
-        );
+        const deviceIds = await getDeviceIdsBatch(lastId, batchSize);
+        if (deviceIds.length === 0) break;
 
-        if (rows.length === 0) break;
+        const batchStart = deviceIds[0];
+        const batchEnd = deviceIds[deviceIds.length - 1];
+        console.log(`📦 [배치 ${batchNumber}] 디바이스 ID ${batchStart} ~ ${batchEnd} (${deviceIds.length}개) 처리 시작`);
 
-        for (const row of rows) {
-            const { id, device_id, time, picture } = row;
-            lastId = id;
-            if (!picture) continue;
+        let batchSuccess = 0;
 
+        for (const deviceId of deviceIds) {
             try {
-                const deviceFolder = `device_${device_id}`;
-                const deviceDir = path.join(PICTURE_DIR, deviceFolder);
-                await fs.mkdir(deviceDir, { recursive: true });
-
-                const tempFilename = `${id}_temp.jpg`;
-                const tempPath = path.join(deviceDir, tempFilename);
-                await fs.writeFile(tempPath, picture);
-
-                const { data } = await ep.readMetadata(tempPath);
-                const meta = data[0] || {};
-                const exifTimeRaw = meta.DateTimeOriginal;
-
-                // EXIF 없음
-                if (!exifTimeRaw) {
-                    console.warn(`⚠️ ID ${id}: EXIF 시간 없음`);
-                    console.warn(`📄 EXIF 메타데이터:\n`, meta);
-                    noExifList.push({ id, device_id, rawExif: meta });
-                    await fs.unlink(tempPath);
-                    continue;
-                }
-
-                // "2025:07:07 14:41:10" → "2025-07-07T14:41:10+09:00"
-                const datePart = exifTimeRaw.slice(0, 10).replace(/:/g, '-');
-                const timePart = exifTimeRaw.slice(11);
-                const parsedDateStr = `${datePart}T${timePart}+09:00`;
-
-                const utcDate = new Date(parsedDateStr);
-                const formatted = utcDate.toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
-                const finalFilename = `${formatted}Z.jpg`;
-                const finalThumb = `${formatted}Z_thumb.jpg`;
-
-                const finalPath = path.join(deviceDir, finalFilename);
-                const thumbPath = path.join(deviceDir, finalThumb);
-
-                await fs.rename(tempPath, finalPath);
-
-                await sharp(picture)
-                    .resize({ width: 320 })
-                    .jpeg({ quality: 80 })
-                    .toFile(thumbPath);
-
-                const relativePath = path.join(deviceFolder, finalFilename);
-                await pool.execute(`UPDATE picture_data SET path = ? WHERE id = ?`, [
-                    relativePath,
-                    id,
-                ]);
-
-                const dbDate = new Date(time);
-                if (Math.abs(dbDate.getTime() - utcDate.getTime()) > 1000) {
-                    await pool.execute(
-                        `UPDATE picture_data SET time = ? WHERE id = ?`,
-                        [utcDate.toISOString().replace('T', ' ').replace('Z', ''), id]
-                    );
-                    console.log(`🕒 ID ${id}: time 갱신됨`);
-                }
-
-                total++;
-                console.log(`✅ ID ${id}: 저장 완료 → ${relativePath}`);
+                const correctedId = await createOrGetCorrectedDevice(deviceId);
+                await insertCorrectedData(deviceId, correctedId);
+                lastId = deviceId;
+                processedCount++;
+                batchSuccess++;
+                console.log(`   ✅ 디바이스 ${deviceId} → 보정 디바이스 ${correctedId} 데이터 추가 완료`);
             } catch (err) {
-                console.error(`❌ ID ${id} 처리 실패:`, err);
+                console.error(`   ❌ 디바이스 ${deviceId} 처리 실패:`, (err as Error).message);
             }
         }
+
+        console.log(`🟢 [배치 ${batchNumber}] 완료: ${batchSuccess}/${deviceIds.length}개 성공`);
+        batchNumber++;
     }
 
-    await ep.close();
-
-    if (noExifList.length > 0) {
-        console.log('\n⚠️ EXIF 없는 이미지 목록:');
-        for (const item of noExifList) {
-            console.log(`- ID ${item.id} (device ${item.device_id})`);
-        }
-        console.log(`총 ${noExifList.length}개의 이미지에 EXIF 정보가 없습니다.`);
-    }
-
-    console.log(`\n🎉 마이그레이션 완료 (총 ${total}건 처리됨)`);
+    const duration = ((Date.now() - startedAt) / 1000).toFixed(1);
+    console.log(`\n🎉 전체 보정 작업 완료`);
+    console.log(`   👉 총 처리 디바이스 수: ${processedCount}개`);
+    console.log(`   ⏱️ 소요 시간: ${duration}초`);
 }

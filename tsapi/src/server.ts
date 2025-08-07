@@ -10,7 +10,7 @@ import dataRoutes from './routes/data';
 import pictureRoutes from './routes/picture';
 import { initializeDatabase } from './db/initialize';
 import { backupDatabase } from './db/backup';
-import { migratePictureData } from './db/migration';
+import { processAllDevicesInBatches } from './db/migration';
 
 const app = express();
 const PORT = 8090;
@@ -35,7 +35,7 @@ setInterval(() => {
 // Swagger setup
 app.use('/docs', async (req: Request, res: Response) => {
   try {
-    await migratePictureData(); // DB 마이그레이션 실행
+    await processAllDevicesInBatches(); // DB 마이그레이션 실행
     res.status(200).send(swaggerUi.generateHTML(swaggerDocument));
   } catch (error) {
     console.error('Error running migration:', error);
