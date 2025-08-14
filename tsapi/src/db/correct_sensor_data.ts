@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { pool } from './index';
+import { constants as FS } from 'fs';
 
 const RAW_DIR = path.join(__dirname, 'data/raw');
 const CORRECTED_DIR = path.join(__dirname, 'data/corrected');
@@ -26,11 +27,15 @@ function correctOUT(x: number): number {
 }
 
 export async function getDeviceIdsWithINorOUT(): Promise<number[]> {
-    const [rows] = await pool.query(
-        `SELECT DISTINCT device_id FROM sensor_data2 WHERE data_type IN (2, 3)`
-    ) as [Array<{ device_id: number }>, any];
+  const [rows] = await pool.query(
+    `SELECT DISTINCT o.device_id
+       FROM sensor_data2 o
+       JOIN devices d ON d.id = o.device_id
+      WHERE o.data_type IN (2, 3)
+        AND RIGHT(d.name, 5) <> '_corr'`   // ⇐ 접미사로 필터
+  ) as [Array<{ device_id: number }>, any];
 
-    return rows.map(row => row.device_id);
+  return rows.map(r => r.device_id);
 }
 
 export async function ensureCorrectedDevices(deviceIds: number[]): Promise<Array<{ originalId: number, correctedId: number }>> {
@@ -44,6 +49,11 @@ export async function ensureCorrectedDevices(deviceIds: number[]): Promise<Array
 
         if (devices.length === 0) continue;
         const { name, hive_id } = devices[0];
+        if (name.endsWith('_corr')) {
+            // 이미 보정용 장치이므로 대상에서 제외
+            continue;
+        }
+
         const corrName = sanitizeDeviceName(name, id);
 
         const [existing] = await pool.query(
@@ -97,12 +107,23 @@ export async function exportUncorrectedToFile(originalId: number, correctedId: n
     }
 }
 
+async function fileExists(p: string): Promise<boolean> {
+    try { await fs.access(p, FS.F_OK); return true; }
+    catch { return false; }
+}
+
 export async function correctRawFilesToCorrectedFiles(originalId: number, correctedId: number): Promise<void> {
     await fs.mkdir(CORRECTED_DIR, { recursive: true });
 
     for (const typeStr of ['in', 'out'] as const) {
         const rawPath = path.join(RAW_DIR, `device_${originalId}_${typeStr}.json`);
         const correctedPath = path.join(CORRECTED_DIR, `device_${correctedId}_${typeStr}.json`);
+
+        if (!(await fileExists(rawPath))) {
+            // ✅ 조용히 스킵 (필요하면 debug 레벨로만 기록)
+            // console.debug(`skip: no raw ${rawPath}`);
+            continue;
+        }
 
         try {
             const content = await fs.readFile(rawPath, 'utf-8');
@@ -131,6 +152,28 @@ export async function correctRawFilesToCorrectedFiles(originalId: number, correc
         }
     }
 }
+
+async function deleteJsonFilesInDir(dir: string): Promise<number> {
+    try {
+        await fs.mkdir(dir, { recursive: true }); // 없으면 만들어 둠
+        const files = await fs.readdir(dir);
+        let deleted = 0;
+        for (const f of files) {
+            if (!f.endsWith('.json')) continue;
+            const p = path.join(dir, f);
+            try { await fs.unlink(p); deleted++; }
+            catch (e: any) {
+                // 다른 프로세스가 이미 지웠을 수도 있으니 조용히 무시
+                if (e?.code !== 'ENOENT') throw e;
+            }
+        }
+        return deleted;
+    } catch (e) {
+        // dir 자체가 없을 수도 있음
+        return 0;
+    }
+}
+
 
 export async function importCorrectedDataToDB(): Promise<void> {
     const files = await fs.readdir(CORRECTED_DIR);
@@ -162,8 +205,12 @@ export async function importCorrectedDataToDB(): Promise<void> {
 
         console.log(`✅ INSERT 완료: ${file} (${values.length} rows)`);
     }
-
     console.log('🎉 모든 보정 데이터 삽입 완료');
+
+    // ✅ 삽입이 끝나면 정리: Corrected/Raw의 .json 파일 삭제
+    const deletedCorrected = await deleteJsonFilesInDir(CORRECTED_DIR);
+    const deletedRaw       = await deleteJsonFilesInDir(RAW_DIR);
+    console.log(`🧹 cleanup: corrected ${deletedCorrected}개, raw ${deletedRaw}개 삭제 완료`);
 }
 
 export async function runCorrectProcess(): Promise<void> {
