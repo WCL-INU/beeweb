@@ -1,5 +1,6 @@
 // initialize.ts
 import { pool } from './index';
+import { initSummary } from './summary';
 
 async function addConstraintIfNotExists(table: string, constraintName: string, sql: string) {
   const [rows] = await pool.query(
@@ -126,6 +127,9 @@ export const initializeDatabase = async () => {
     await addConstraintIfNotExists('devices', 'fk_devices_type', `ALTER TABLE devices ADD CONSTRAINT fk_devices_type FOREIGN KEY (type_id) REFERENCES device_types(id)`);
 
     console.log('✅ Database schema and data initialized');
+
+    await initSummary();
+    console.log('✅ Summary tables initialized');
   } catch (err) {
     console.error('❌ Failed to initialize database:', err);
     process.exit(1);

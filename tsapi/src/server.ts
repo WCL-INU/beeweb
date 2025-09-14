@@ -8,6 +8,13 @@ import legacyRoutes from './routes/legacy';
 import userRoutes from './routes/user';
 import dataRoutes from './routes/data';
 import { initializeDatabase } from './db/initialize';
+import { backfillRange } from './db/summary';
+
+// export async function backfillRange(
+//   from: Date | string,
+//   to: Date | string,
+//   stepDays = 7
+// ) {
 
 const app = express();
 const PORT = 8090;
@@ -26,7 +33,22 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // API endpoint
 app.get('/hello', (req: Request, res: Response) => {
-  res.json({ message: 'Hello, World!' });
+  // 응답은 즉시
+  res.send('Hello, World!');
+
+  // 백필은 백그라운드에서 실행
+  backfillRange('2022-01-01', '2025-10-30', 7, {
+    autoGrowStep: true,
+    growFactor: 2,
+    growThreshold: 3,
+    maxStepDays: 60,
+  })
+    .then(() => {
+      console.log('✅ Backfill finished');
+    })
+    .catch((err) => {
+      console.error('❌ Backfill error', err);
+    });
 });
 
 // Device routes

@@ -2,6 +2,7 @@
 import express, { Request, Response } from 'express';
 import { getSensorData2, insertSensorData2 } from '../db/data';
 import { DATA_TYPE, SensorData2Insert, SensorData2Value } from '../types';
+import { getSensorDataUnified, type SummaryLevel } from '../db/summary'; // 앞서 만든 함수/타입
 
 const FIELD_TO_TYPE_MAP: Record<string, number> = {
     in_field: DATA_TYPE.IN,
@@ -15,49 +16,90 @@ const FIELD_TO_TYPE_MAP: Record<string, number> = {
 const router = express.Router();
 router.use(express.json());
 
-// ✅ GET /sensor2 : 특정 data_type을 지정하여 조회
+
+// 기간 기반 자동 선택 규칙(원하면 조정)
+// - ≤ 1일: raw
+// - ≤ 7일: 5m
+// - ≤ 30일: 30m
+// -  그 이상: 2h
+function chooseSummaryLevel(sISO: string, eISO: string): SummaryLevel {
+  const s = new Date(sISO).getTime();
+  const e = new Date(eISO).getTime();
+  const span = Math.max(0, e - s);
+
+  const day = 24 * 3600 * 1000;
+  if (span <= 1 * day) return 'raw';
+  if (span <= 7 * day) return '5m';
+  if (span <= 30 * day) return '30m';
+  return '2h';
+}
+
+function parseLevel(q: unknown, s: string, e: string): SummaryLevel {
+  const lv = (typeof q === 'string' ? q.toLowerCase() : 'auto') as
+    | 'auto' | SummaryLevel;
+  if (lv === 'auto' || !lv) return chooseSummaryLevel(s, e);
+  if (lv === 'raw' || lv === '5m' || lv === '30m' || lv === '2h') return lv;
+  return chooseSummaryLevel(s, e); // 잘못된 값이면 auto로
+}
+
+// ✅ GET /sensor2 : 특정 data_type을 지정하여 조회 (raw/summary 공통)
 router.get('/sensor2', async (req: Request, res: Response) => {
-    // #swagger.tags = ['Sensor2']
-    // #swagger.description = 'Fetch sensor or inout data by type and time range'
-    // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true }
-    // #swagger.parameters['sTime'] = { description: 'Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)', required: true }
-    // #swagger.parameters['eTime'] = { description: 'End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)', required: true }
-    // #swagger.parameters['dataTypes'] = { description: 'Comma-separated data types (e.g. 2,3,4)', required: true }
+  // #swagger.tags = ['Sensor2']
+  // #swagger.description = 'Fetch sensor or inout data by type and time range'
+  // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true }
+  // #swagger.parameters['sTime'] = { description: 'Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)', required: true }
+  // #swagger.parameters['eTime'] = { description: 'End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)', required: true }
+  // #swagger.parameters['dataTypes'] = { description: 'Comma-separated data types (e.g. 2,3,4)', required: true }
+  // #swagger.parameters['level'] = { description: 'raw | 5m | 30m | 2h | auto(default)', required: false }
 
-    try {
-        const deviceId = parseInt(req.query.deviceId as string);
-        const sTime = req.query.sTime as string;
-        const eTime = req.query.eTime as string;
-        const dataTypes = req.query.dataTypes;
+  try {
+    const deviceId = Number(req.query.deviceId);
+    const sTime = String(req.query.sTime || '');
+    const eTime = String(req.query.eTime || '');
+    const dataTypesQ = req.query.dataTypes;
 
-        if (!deviceId || !sTime || !eTime || !dataTypes) {
-            res.status(400).json({ error: 'Missing required fields' });
-            return;
-        }
-
-        const parsedTypes = Array.isArray(dataTypes)
-            ? dataTypes.map(Number)
-            : (dataTypes as string).split(',').map(Number);
-
-        const rows = await getSensorData2(deviceId, sTime, eTime, parsedTypes);
-
-        const result: SensorData2Value[] = rows.map(row => ({
-            id: row.id,
-            device_id: row.device_id,
-            data_type: row.data_type,
-            time: row.time,
-            value: Number(row.data_int ?? row.data_float ?? 0)
-        }));
-
-        if (result.length === 0) {
-            res.status(404).json({ error: 'No data found' });
-        } else {
-            res.status(200).json(result);
-        }
-    } catch (error) {
-        console.error('Error in /sensor2 GET:', error);
-        res.status(500).json({ error: 'Failed to fetch sensor data' });
+    if (!deviceId || !sTime || !eTime || !dataTypesQ) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
     }
+
+    // dataTypes 파싱/정제
+    const parsedTypes = (Array.isArray(dataTypesQ)
+      ? dataTypesQ.join(',')
+      : String(dataTypesQ)
+    )
+      .split(',')
+      .map(s => Number(s.trim()))
+      .filter(n => Number.isFinite(n));
+    if (parsedTypes.length === 0) {
+      res.status(400).json({ error: 'Invalid dataTypes' });
+      return;
+    }
+
+    // level 결정(명시 or auto)
+    const level = parseLevel(req.query.level, sTime, eTime);
+
+    // 공통 조회 (raw/summary 동일 포맷)
+    const rows = await getSensorDataUnified(deviceId, sTime, eTime, parsedTypes, level);
+
+    // 기존 응답 포맷 유지
+    const result: SensorData2Value[] = rows.map(row => ({
+      id: row.id,
+      device_id: row.device_id,
+      data_type: row.data_type,
+      time: row.time,
+      value: Number(row.data_int ?? row.data_float ?? 0),
+    }));
+
+    if (result.length === 0) {
+      res.status(404).json({ error: 'No data found', level });
+    } else {
+      res.status(200).json({ level, data: result });
+    }
+  } catch (error) {
+    console.error('Error in /sensor2 GET:', error);
+    res.status(500).json({ error: 'Failed to fetch sensor data' });
+  }
 });
 
 // ✅ 단건 입력
