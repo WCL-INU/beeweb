@@ -1,29 +1,56 @@
 let fetcher_device = null;
 let fetcher_tRange = { sTime: null, eTime: null };
 
+// UTC 문자열을 로컬 시간 문자열로 변환
+function toLocalTimeString(utcString) {
+    const date = new Date(utcString);
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
 async function fetchPictureData() {
     try {
-        if (!fetcher_device || !fetcher_tRange.sTime || !fetcher_tRange.eTime) {
+        if (!fetcher_device || !fetcher_tRange.sTime || !fetcher_tRange.eTime) return;
+
+        document.dispatchEvent(new Event('loadingStart'));  // 로딩 시작 알림
+
+        const url = `${window.BASE_PATH}api/picture?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.warn(`Fetch 실패: HTTP ${response.status}`);
+            document.dispatchEvent(new CustomEvent('dataUpdated', { detail: [] }));
             return;
         }
-        const url = `${window.BASE_PATH}api/camera?deviceId=${fetcher_device}&sTime=${fetcher_tRange.sTime}&eTime=${fetcher_tRange.eTime}`;
-        const response = await fetch(url);
-        let data = await response.json();
 
-        // Buffer 데이터를 Base64로 변환하여 사용할 수 있도록 처리
-        const pictures = data.map(item => ({
-            url: `data:image/jpeg;base64,${arrayBufferToBase64(item.picture.data)}`, // Buffer 데이터를 Base64로 변환
-            time: item.time.replace('T', ' ').replace('.000Z', '') // 시간 포맷 수정
-        }));
+        const data = await response.json();
 
-        // 이벤트로 데이터 전달
-        const dataUpdatedEvent = new CustomEvent('dataUpdated', { detail: pictures });
-        document.dispatchEvent(dataUpdatedEvent);
+        const pictures = data.map(item => {
+            const fullUrl = `${window.BASE_PATH}picture/${item.path}`;
+            const thumbUrl = fullUrl.replace(/\.jpg$/, '_thumb.jpg');
+            return {
+                fullUrl,
+                thumbUrl,
+                time: toLocalTimeString(item.time)
+            };
+        });
+
+        document.dispatchEvent(new CustomEvent('dataUpdated', { detail: pictures }));
 
     } catch (error) {
-        console.error(error);
+        console.error('fetchPictureData 에러:', error);
+        // 네트워크 에러나 JSON 파싱 에러 등도 빈 배열로 대응
+        document.dispatchEvent(new CustomEvent('dataUpdated', { detail: [] }));
     }
 }
+
 
 // Buffer 데이터를 Base64로 변환하는 함수
 function arrayBufferToBase64(buffer) {

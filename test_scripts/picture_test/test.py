@@ -13,24 +13,24 @@ files = {
 
 metadata = {
     'type': '1',
-    'file1_id': '27',
+    'file1_id': '1',
     'file1_time': '2024-10-03T10:10:10',
-    'file2_id': '27',
+    'file2_id': '1',
     'file2_time': '2024-10-03T10:11:10',
-    'file3_id': '27',
+    'file3_id': '1',
     'file3_time': '2024-10-03T10:12:10',
-    'file4_id': '27',
+    'file4_id': '1',
     'file4_time': '2024-10-03T10:13:10',
-    'file5_id': '27',
+    'file5_id': '1',
     'file5_time': '2024-10-03T10:14:10',
-    'file6_id': '27',
+    'file6_id': '1',
     'file6_time': '2024-10-03T10:15:10',
-    'file7_id': '27',
+    'file7_id': '1',
     'file7_time': '2024-10-03T10:16:10',
 }
 
 # 서버 URL
-url = 'http://127.0.0.1/honeybee/api/upload'
+url = 'http://127.0.0.1:8082/api/upload'
 
 # 멀티파트 폼 데이터 요청 보내기
 response = requests.post(url, files={

@@ -17,34 +17,6 @@ export const initializeDatabase = async () => {
     await pool.execute(`CREATE DATABASE IF NOT EXISTS hive_data`);
     await pool.execute(`USE hive_data`);
 
-    await pool.execute(`CREATE TABLE IF NOT EXISTS inout_data (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      device_id INT NOT NULL,
-      in_field INT,
-      out_field INT,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
-    )`);
-
-    await pool.execute(`CREATE TABLE IF NOT EXISTS sensor_data (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      device_id INT NOT NULL,
-      temp FLOAT,
-      humi FLOAT,
-      co2 FLOAT,
-      weigh FLOAT,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
-    )`);
-
-    await pool.execute(`CREATE TABLE IF NOT EXISTS camera_data (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      device_id INT NOT NULL,
-      picture LONGBLOB,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
-    )`);
-
     await pool.execute(`CREATE TABLE IF NOT EXISTS data_types (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -64,12 +36,12 @@ export const initializeDatabase = async () => {
       UNIQUE KEY unique_device_time (device_id, data_type, time)
     )`);
 
-    await pool.execute(`CREATE TABLE IF NOT EXISTS picutre_data (
+    await pool.execute(`CREATE TABLE IF NOT EXISTS picture_data (
       id INT AUTO_INCREMENT PRIMARY KEY,
       device_id INT NOT NULL,
-      picture LONGBLOB,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_device_time (device_id, time)
+      time DATETIME NOT NULL,
+      path VARCHAR(255) NOT NULL,
+      UNIQUE KEY unique_picture (device_id, time)
     )`);
 
     await pool.execute(`CREATE TABLE IF NOT EXISTS hives (
@@ -116,12 +88,9 @@ export const initializeDatabase = async () => {
       ('admin', 'A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=', 1)
       ON DUPLICATE KEY UPDATE pw = VALUES(pw), grade = VALUES(grade)`);
 
-    await addConstraintIfNotExists('inout_data', 'fk_inout_device', `ALTER TABLE inout_data ADD CONSTRAINT fk_inout_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
-    await addConstraintIfNotExists('sensor_data', 'fk_sensor_device', `ALTER TABLE sensor_data ADD CONSTRAINT fk_sensor_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
-    await addConstraintIfNotExists('camera_data', 'fk_camera_device', `ALTER TABLE camera_data ADD CONSTRAINT fk_camera_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_device', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_data_type', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_data_type FOREIGN KEY (data_type) REFERENCES data_types(id) ON DELETE CASCADE`);
-    await addConstraintIfNotExists('picutre_data', 'fk_picutre_device', `ALTER TABLE picutre_data ADD CONSTRAINT fk_picutre_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
+    await addConstraintIfNotExists('picture_data', 'fk_picture_device', `ALTER TABLE picture_data ADD CONSTRAINT fk_picture_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('hives', 'fk_hives_area', `ALTER TABLE hives ADD CONSTRAINT fk_hives_area FOREIGN KEY (area_id) REFERENCES areas(id)`);
     await addConstraintIfNotExists('devices', 'fk_devices_hive', `ALTER TABLE devices ADD CONSTRAINT fk_devices_hive FOREIGN KEY (hive_id) REFERENCES hives(id)`);
     await addConstraintIfNotExists('devices', 'fk_devices_type', `ALTER TABLE devices ADD CONSTRAINT fk_devices_type FOREIGN KEY (type_id) REFERENCES device_types(id)`);

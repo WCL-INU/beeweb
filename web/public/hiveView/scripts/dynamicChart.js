@@ -12,7 +12,7 @@ function addChartBlock(selectedOptions = []) {
     const chartBlock = document.createElement('div');
     chartBlock.className = 'chart-block';
     chartBlock.id = `chart${chart_index++}`;
-    console.log('Adding chart block:', chartBlock.id);
+    console.log('[DynamicChart] Adding chart block:', chartBlock.id);
 
     const checklistHTML = chart_datas.map(data => {
         const isChecked = selectedOptions.includes(Number(data.device.id)) ? 'checked' : '';
@@ -246,7 +246,7 @@ function initializeSlider(chartBlock, min, max, updateCallback) {
 
         // 반환된 값을 소수점 첫째 자리까지만 표시
         const roundedValues = values.map(value => parseFloat(value).toFixed(1));
-        console.log(`Slider values min: ${roundedValues[0]}, max: ${roundedValues[1]}`);
+        console.log(`[DynamicChart] Slider values min: ${roundedValues[0]}, max: ${roundedValues[1]}`);
         updateCallback(roundedValues);
     });
 }
@@ -262,7 +262,7 @@ function getValueRangeFromDatas(datas) {
             minValue = Math.min(...dataValues);
         }
     }
-    console.log(`maxValue: ${maxValue}, minValue: ${minValue}`);
+    console.log(`[DynamicChart] maxValue: ${maxValue}, minValue: ${minValue}`);
     return { minValue, maxValue };
 }
 
@@ -285,7 +285,7 @@ function getTimeRangeFromURL() {
       const sTimeDate = new Date(sTime);
       const eTimeDate = new Date(eTime);
 
-      console.log(`sTimeDate: ${sTimeDate}, eTimeDate: ${eTimeDate}`);
+      console.log(`[DynamicChart] sTimeDate: ${sTimeDate}, eTimeDate: ${eTimeDate}`);
     return { sTimeDate, eTimeDate };
 }
 
@@ -303,7 +303,7 @@ function updateChartData(chartBlock, minValue, maxValue) {
     const canvas = chartBlock.querySelector('canvas');
     const ctx = canvas.getContext('2d');
     const id = chartBlock.id;
-    console.log('Updating chart with options:', options);
+    console.log('[DynamicChart] Updating chart with options:', options);
 
     const datas = chart_datas.filter(data => options.includes(String(data.device.id)));
     // 시간 획득
@@ -373,41 +373,6 @@ function updateChart(checkbox, isNeedUpdateURL = true) {
 }
 
 // ================== URL 파라미터 관리 ==================
-
-// URL 파라미터 업데이트 함수
-// function updateURLParams() {
-//     const params = new URLSearchParams(window.location.search);
-
-//     let chart_list = [];
-
-//     // 본문에서 chart 검색
-//     const chartBlocks = Array.from(document.querySelectorAll('.chart-block'));
-
-//     // chart로부터 chart_list 배열 생성
-//     for (let i = 0; i < chartBlocks.length; i++) {
-//         const selectedOptions = Array.from(chartBlocks[i].querySelectorAll('.chart-device-checklist input:checked')).map(cb => cb.id);
-//         if (selectedOptions.length > 0) {
-//             const id = i;
-//             chart_list.push({ id, value: selectedOptions });
-//         }
-//     }
-
-//     // Chart 파라미터 초기화
-//     for (const key of params.keys()) {
-//         if (key.startsWith('chart')) {
-//             params.delete(key);
-//         }
-//     }
-
-//     // chart_list 배열을 URL 파라미터로 변환
-//     for (const chart of chart_list) {
-//         params.set(`chart${chart.id}`, chart.value.join(','));
-//     }
-
-//     const newURL = window.location.pathname + '?' + params.toString();
-//     window.history.replaceState(null, '', newURL);
-// }
-
 // URL 파라미터로부터 차트 렌더링 함수
 async function fetchAndRenderCharts() {
     const urlSearchParams = new URLSearchParams(window.location.search);
@@ -471,7 +436,7 @@ async function fetchAndRenderCharts() {
 // ================== 이벤트 리스너 ==================
 // 디바이스 로드 완료 시
 document.addEventListener('dataUpdated', (event) => {
-    console.log('dataLoaded:', event.detail);
+    console.log('[DynamicChart] dataLoaded:', event.detail);
     chart_datas = event.detail;
 
     // URL 파라미터로부터 차트 렌더링

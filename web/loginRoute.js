@@ -63,20 +63,30 @@ router.post('/login', (req, res, next) => {
       console.log('Authentication failed');
       return res.redirect('login');
     }
+
     req.logIn(user, (err) => {
       if (err) {
         console.log('Login error:', err);
         return next(err);
       }
 
-      const originalUrl = req.headers.referer || '';
-      console.log('2Original URL:', originalUrl);
-      const segments = originalUrl.split('/').slice(3); // 첫 3개 요소 (http:, '', '도메인') 제거
-      // 첫 번째 경로가 프리픽스인지 확인
+      // ✅ 최우선: 세션에 저장된 returnTo가 있으면 그걸로 이동
+      const returnTo = req.session.returnTo;
+      if (returnTo) {
+        console.log('✅ Redirecting to returnTo:', returnTo);
+        delete req.session.returnTo;
+        return res.redirect(returnTo);
+      }
+
+      // ✅ fallback: referer에서 basePath 추출
+      const referer = req.headers.referer || '';
+      console.log('2Original URL:', referer);
+      const segments = referer.split('/').slice(3);
       console.log('2Segments:', segments);
       const basePath = (segments.length > 1) ? `/${segments[0]}` : '/';
       console.log('2Base path:', basePath);
-      return res.redirect(`${basePath}`);
+
+      return res.redirect(basePath);
     });
   })(req, res, next);
 });

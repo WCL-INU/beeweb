@@ -64,6 +64,7 @@ app.use(express.json()); // JSON 요청 본문 파싱
 
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, 'public'), { redirect: false }));
+app.use('/picture', express.static('/app/db/picture'));
 
 // // Serve Chart.js from node_modules
 app.use('/chart.js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')));
@@ -73,18 +74,29 @@ app.use('/chartjs-adapter-date-fns', express.static(path.join(__dirname, 'node_m
 
 // 인증 미들웨어 함수
 function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  const originalUrl = req.headers.referer || '';
-  console.log('1Original URL:', originalUrl);
-  const segments = originalUrl.split('/').slice(3); // 첫 3개 요소 (http:, '', '도메인') 제거
-  console.log('1Segments:', segments);
-  // 첫 번째 경로가 프리픽스인지 확인
-  const basePath = (segments.length > 1) ? `/${segments[0]}` : '';
-  console.log('1Base path:', basePath);
-  res.redirect(`${basePath}/login`);
+    if (req.isAuthenticated()) {
+        return next();
+    }
 
+    let returnTo = '';
+    let basePath = '';
+
+    if (req.headers['x-original-url']) {
+        returnTo = req.headers['x-original-url'];
+        const segments = returnTo.split('/').slice(1);
+        basePath = segments.length > 0 ? `/${segments[0]}` : '';
+    } else {
+        const referer = req.headers.referer || '';
+        const segments = referer.split('/').slice(3);
+        basePath = (segments.length > 1) ? `/${segments[0]}` : '';
+        returnTo = basePath + req.originalUrl;
+    }
+
+    console.log('📌 basePath:', basePath || '(none)');
+    console.log('📌 returnTo:', returnTo);
+
+    const encodedReturnTo = encodeURIComponent(returnTo);
+    res.redirect(`${basePath}/login?returnTo=${encodedReturnTo}`);
 }
 
 //============== 라우터 설정 ==============

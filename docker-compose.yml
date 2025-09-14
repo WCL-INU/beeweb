@@ -3,8 +3,10 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    expose:
-      - "3306"
+    # expose:
+    #   - "3306"
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -27,6 +29,9 @@ services:
       DB_NAME: ${MYSQL_DATABASE}
     ports:
       - "8090:8090"
+    volumes:
+      - ./db/backup:/app/db/backup  # 백업 경로 마운트
+      - picture_data:/app/db/picture
     restart: always
 
   # data-collector:
@@ -53,7 +58,9 @@ services:
     volumes:
       - ./web:/usr/src/app   # 로컬 경로를 컨테이너 경로로 마운트
       - /usr/src/app/node_modules   # node_modules는 컨테이너 내부에만 존재하게 함
+      - picture_data:/app/db/picture
     restart: always
 
 volumes:
   db_data:
+  picture_data:

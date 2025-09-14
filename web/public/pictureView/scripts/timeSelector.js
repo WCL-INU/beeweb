@@ -1,16 +1,24 @@
 function searchWithTimePeriod() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    
-    if (startDate && endDate) {
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set('sTime', new Date(startDate).toISOString().split('.')[0] + 'Z');
-        newUrl.searchParams.set('eTime', new Date(endDate).toISOString().split('.')[0] + 'Z');
-        window.history.replaceState(null, '', newUrl.toString()); // URL 업데이트
-    }
+    const startDateInput = document.getElementById('startDate').value;
+    const endDateInput = document.getElementById('endDate').value;
 
-    const updateEvent = new CustomEvent('timeRangeUpdated', { detail: { sTime: startDate, eTime: endDate } });
-    document.dispatchEvent(updateEvent);
+    if (startDateInput && endDateInput) {
+        const startDate = new Date(startDateInput);
+        const endDate = new Date(endDateInput);
+
+        const sTime = startDate.toISOString().split('.')[0] + 'Z';
+        const eTime = endDate.toISOString().split('.')[0] + 'Z';
+
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('sTime', sTime);
+        newUrl.searchParams.set('eTime', eTime);
+        window.history.replaceState(null, '', newUrl.toString());
+
+        const updateEvent = new CustomEvent('timeRangeUpdated', {
+            detail: { sTime, eTime }
+        });
+        document.dispatchEvent(updateEvent);
+    }
 }
 
 function setPreset(period) {

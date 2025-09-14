@@ -79,7 +79,7 @@ export const getSensorData2 = async (
           AND time BETWEEN ? AND ?
         ORDER BY time DESC
     `;
-
+    console.log(`Executing query: ${query} with params: [${deviceId}, ${dataTypes}, ${sTime}, ${eTime}]`);
     const params = [deviceId, ...dataTypes, sTime, eTime];
     const [rows] = await pool.execute(query, params);
 

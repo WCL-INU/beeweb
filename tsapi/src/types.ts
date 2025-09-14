@@ -69,6 +69,17 @@ export interface SensorData2Value {
     value: number;
 }
 
+// PictureData 관련 인터페이스
+// ===================================================
+export interface PictureDataInsert {
+    device_id: number;
+    time: string; // 'YYYY-MM-DD HH:MM:SS'
+    path: string; // e.g., 'device_123/20250625_123000.jpg'
+}
+
+export interface PictureDataRow extends PictureDataInsert {
+    id: number;
+}
 export const DATA_TYPE = {
     PICUTRE: 1,   // 현재 사용 안 함
     IN: 2,
