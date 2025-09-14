@@ -1,10 +1,10 @@
-// 날짜를 input 필드용 로컬 시간 문자열로 변환
+// 날짜를 input 필드용 로컬 시간 문자열로 변환 (YYYY-MM-DDTHH:mm)
 function convertToLocalDateTime(date) {
     const tzOffset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
 }
 
-// ISO 문자열에서 밀리초 제거
+// ISO 문자열에서 밀리초 제거 (서버가 Z-UTC 초단위 요구 시 사용)
 function toISOStringWithoutMillis(date) {
     return date.toISOString().split('.')[0] + 'Z';
 }

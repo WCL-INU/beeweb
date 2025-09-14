@@ -2,19 +2,30 @@ let fetcher_deviceList = [];
 let fetcher_tRange = {sTime: null, eTime: null};
 let fetcher_dataList = [];
 
-async function fetchSensor2Data(deviceId, sTime, eTime, dataTypes) {
-    const typeStr = dataTypes.join(',');
-    const url = `${window.BASE_PATH}api/data/sensor2?deviceId=${deviceId}&sTime=${sTime}&eTime=${eTime}&dataTypes=${typeStr}`;
-    const response = await fetch(url);
+async function fetchSensor2Data(deviceId, sTime, eTime, dataTypes, level) {
+    const typeStr = Array.isArray(dataTypes) ? dataTypes.join(',') : String(dataTypes);
 
-    if (!response.ok) {
-        console.warn(`[DataFetcher] No data for device ${deviceId} (status: ${response.status})`);
-        return [];
-    }
+    // ✅ 어떤 값이 들어와도 ISO(+Z)로 정규화
+    const sIso = new Date(sTime).toISOString();
+    const eIso = new Date(eTime).toISOString();
 
-    const data = await response.json();
-    console.log(`[DataFetcher] ${data.length} data points received for device ${deviceId} (${sTime} ~ ${eTime})`, data);
-    return data;
+    const url = new URL(`${window.BASE_PATH}api/data/sensor2`, window.location.origin);
+    url.search = new URLSearchParams({
+        deviceId: String(deviceId),
+        sTime: sIso,
+        eTime: eIso,
+        dataTypes: typeStr,
+        level, // 요약을 먼저 검증하고 싶으면 '5m'로 고정
+    }).toString();
+
+    const response = await fetch(url.href);
+
+    if (response.status === 404) return [];
+    if (!response.ok) return [];
+
+    const body = await response.json();
+    const rows = Array.isArray(body) ? body : body.data;
+    return Array.isArray(rows) ? rows : [];
 }
 
 async function fetchDataList() {
@@ -55,7 +66,10 @@ async function fetchDataList() {
                     value: d.value,
                     time: d.time
                 }));
-
+            
+            // 빈 데이터는 무시
+            if (!parsed.length) continue;
+    
             const deviceMeta = {
                 id: i++,
                 type: label,
@@ -73,7 +87,7 @@ async function fetchDataList() {
 
 // ================== 장치 선택기의 이벤트 리스너 ==================
 document.addEventListener('deviceListUpdated', async (event) => {
-    console.log('deviceListUpdated:', event.detail);
+    console.log('[DataFetcher] deviceListUpdated:', event.detail);
 
     fetcher_deviceList = event.detail;
     await fetchDataList();
@@ -82,7 +96,7 @@ document.addEventListener('deviceListUpdated', async (event) => {
 
 // ================== 시간 선택기의 이벤트 리스너 ==================
 document.addEventListener('timeRangeUpdated', async (event) => {
-    console.log(`Time range updated: ${event.detail.sTime} ~ ${event.detail.eTime}`);
+    console.log(`[DataFetcher] Time range updated: ${event.detail.sTime} ~ ${event.detail.eTime}`);
     fetcher_tRange = event.detail;
     if(fetcher_deviceList.length > 0) {
         await fetchDataList();
@@ -92,9 +106,9 @@ document.addEventListener('timeRangeUpdated', async (event) => {
 
 // ================== latestInfo의 이벤트 리스너 ==================
 document.addEventListener('dataUpdated', (event) => {
-    console.log('dataLoaded:', fetcher_dataList);
+    console.log('[DataFetcher] dataLoaded:', fetcher_dataList);
     const dataList = event.detail;
-    console.log('dataList:', dataList);
+    console.log('[DataFetcher] dataList:', dataList);
 
     const latestInData = getLatestData(dataList, 'In');
     const latestOutData = getLatestData(dataList, 'Out');
@@ -144,8 +158,8 @@ function getLatestData(dataList, type) {
     let latest = null;
 
     for (const item of filtered) {
-        if (!item.data || item.data.length === 0) continue; // 💡 추가
-        const latestEntry = item.data[0];
+        if (!item.data || item.data.length === 0) continue; // 안전 가드
+        const latestEntry = item.data[0]; // 시간 내림차순으로 정렬되어 있다고 가정
         if (!latest || new Date(latestEntry.time) > new Date(latest.time)) {
             latest = latestEntry;
         }
