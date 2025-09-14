@@ -673,16 +673,3 @@ export async function getSensorDataUnified(
   const [rows] = await pool.execute(q, params);
   return rows as SensorData2Row[];
 }
-
-// ── (선택) 라이브니스 타이머 ────────────────────────────────────────
-/** 운영 편의를 위한 주기적 펌프(집계 시각은 데이터로만 결정됨). 반환값으로 stop 핸들 제공 */
-export function startSummaryScheduler(opts?: {
-  periodMs?: number;      // 펌프 주기(기본 15초)
-  limitPerRun?: number;   // 배치 LIMIT
-}) {
-  const periodMs = opts?.periodMs ?? 15_000;
-  const limitPerRun = opts?.limitPerRun ?? 500;
-  const id = setInterval(() => drainSummaryOnce(limitPerRun).catch(console.error), periodMs);
-  console.log('⏱️ summary pump started (time-agnostic; +buffers 1/3)');
-  return () => { clearInterval(id); console.log('⏹️ summary pump stopped'); };
-}

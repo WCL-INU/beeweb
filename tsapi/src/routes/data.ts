@@ -2,7 +2,7 @@
 import express, { Request, Response } from 'express';
 import { getSensorData2, insertSensorData2 } from '../db/data';
 import { DATA_TYPE, SensorData2Insert, SensorData2Value } from '../types';
-import { getSensorDataUnified, type SummaryLevel } from '../db/summary'; // 앞서 만든 함수/타입
+import { enqueueTouchesForRaw , getSensorDataUnified, type SummaryLevel } from '../db/summary'; // 앞서 만든 함수/타입
 
 const FIELD_TO_TYPE_MAP: Record<string, number> = {
     in_field: DATA_TYPE.IN,
@@ -128,6 +128,7 @@ router.post('/uplink', async (req: Request, res: Response) => {
 
         const time = new Date().toISOString().slice(0, 19).replace('T', ' ');
         const rows: SensorData2Insert[] = [];
+        const touches: { device_id: number; type: number; time: string }[] = [];
 
         for (const key in values) {
             const type = FIELD_TO_TYPE_MAP[key];
@@ -143,9 +144,18 @@ router.post('/uplink', async (req: Request, res: Response) => {
                 data_int: ['in_field', 'out_field'].includes(key) ? value : null,
                 data_float: ['temp', 'humi', 'co2', 'weigh'].includes(key) ? value : null
             });
+
+            touches.push({ device_id: id, type, time });
         }
 
+        // ✅ 1. raw 먼저 insert
         await insertSensorData2(rows);
+
+        // ✅ 2. touch 나중에 insert (직렬)
+        for (const t of touches) {
+            await enqueueTouchesForRaw(t.device_id, t.type, t.time);
+        }
+
         res.status(200).json({ message: 'Sensor data uplinked successfully' });
     } catch (error) {
         console.error('Error in /uplink POST:', error);
@@ -182,10 +192,12 @@ router.post('/upload', async (req: Request, res: Response) => {
         }
 
         const rows: SensorData2Insert[] = [];
+        const touches: { device_id: number; type: number; time: string }[] = [];
 
         for (const item of data) {
             const device_id = item.device_id;
-            const time = item.time?.replace('T', ' ').replace('Z', '') ?? new Date().toISOString().slice(0, 19).replace('T', ' ');
+            const time = item.time?.replace('T', ' ').replace('Z', '') 
+                      ?? new Date().toISOString().slice(0, 19).replace('T', ' ');
             const values = item.values as Record<string, number>;
 
             for (const key in values) {
@@ -202,10 +214,19 @@ router.post('/upload', async (req: Request, res: Response) => {
                     data_int: ['in_field', 'out_field'].includes(key) ? value : null,
                     data_float: ['temp', 'humi', 'co2', 'weigh'].includes(key) ? value : null
                 });
+
+                touches.push({ device_id, type, time });
             }
         }
 
+        // ✅ 1. raw 먼저 insert
         await insertSensorData2(rows);
+
+        // ✅ 2. touch 나중에 insert (직렬)
+        for (const t of touches) {
+            await enqueueTouchesForRaw(t.device_id, t.type, t.time);
+        }
+
         res.status(200).json({ message: 'Sensor data uploaded successfully' });
     } catch (error) {
         console.error('Error in /upload POST:', error);
