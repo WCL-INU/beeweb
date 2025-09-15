@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { pool } from './index';
 import { constants as FS } from 'fs';
+import { enqueueTouchesForRaw } from './summary';  // 꼭 임포트하세요
 
 const RAW_DIR = path.join(__dirname, 'data/raw');
 const CORRECTED_DIR = path.join(__dirname, 'data/corrected');
@@ -204,6 +205,11 @@ export async function importCorrectedDataToDB(): Promise<void> {
         );
 
         console.log(`✅ INSERT 완료: ${file} (${values.length} rows)`);
+
+        // ✅ 2. 터치 큐 기록 (직렬 실행)
+        for (const r of rows) {
+            await enqueueTouchesForRaw(r.device_id, r.data_type, r.time);
+        }
     }
     console.log('🎉 모든 보정 데이터 삽입 완료');
 
