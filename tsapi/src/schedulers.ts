@@ -3,6 +3,7 @@ import { initializeDatabase } from "./db/initialize";
 import { drainSummaryOnce } from "./db/summary";
 import { backupDatabase } from "./db/backup";
 import { runCorrectProcess } from "./db/correct_sensor_data";
+import { cleanupExpiredExports, resumePendingExports } from "./export/service";
 
 export type StopFn = () => void;
 
@@ -12,7 +13,7 @@ export function isReady() {
 }
 
 // =======================
-// 내부 작업 함수
+// 주기 작업 함수
 // =======================
 
 async function runSummaryPump() {
@@ -49,13 +50,21 @@ export async function startInfra(): Promise<StopFn> {
 
     const stops: StopFn[] = [];
 
-    // Summary Pump (15초마다 실행, 부팅 직후 1회 실행)
+    await resumePendingExports();
+
+    const exportCleanupTimer = setInterval(() => {
+        cleanupExpiredExports().catch((err) => console.error("[scheduler] export cleanup error:", err));
+    }, 60 * 60 * 1000);
+    console.log("[scheduler] export cleanup started");
+    stops.push(() => clearInterval(exportCleanupTimer));
+
+    // Summary Pump (15분마다 실행, 시작 시점 1회 실행)
     void runSummaryPump();
     const pumpTimer = setInterval(runSummaryPump, 15_000);
     console.log("[scheduler] summary pump started");
     stops.push(() => clearInterval(pumpTimer));
 
-    // Clock Jobs (매일 자정 백업, 매시 정각 보정)
+    // Clock Jobs (백업/보정 주기 실행)
     const clockTimer = setInterval(() => {
         const now = new Date();
         if (now.getHours() === 0 && now.getMinutes() === 0) {

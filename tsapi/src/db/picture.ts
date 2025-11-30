@@ -63,3 +63,39 @@ export const getPictureData = async (
     const [rows] = await pool.execute(query, [deviceId, sTime, eTime]);
     return rows as PictureDataRow[];
 };
+
+export interface PictureExportRow extends PictureDataRow {
+    device_name: string | null;
+    hive_id: number | null;
+    hive_name: string | null;
+    time_utc: string;
+}
+
+export const getPictureDataBatch = async (
+    deviceId: number,
+    sTime: string,
+    eTime: string,
+    limit: number,
+    offset: number
+): Promise<PictureExportRow[]> => {
+    const query = `
+        SELECT
+            p.id,
+            p.device_id,
+            d.name AS device_name,
+            d.hive_id,
+            h.name AS hive_name,
+            p.time,
+            DATE_FORMAT(CONVERT_TZ(p.time, '+00:00', '+00:00'), '%Y-%m-%dT%H:%i:%sZ') as time_utc,
+            p.path
+        FROM picture_data p
+        JOIN devices d ON d.id = p.device_id
+        LEFT JOIN hives h ON h.id = d.hive_id
+        WHERE p.device_id = ?
+          AND p.time BETWEEN ? AND ?
+        ORDER BY p.time ASC
+        LIMIT ? OFFSET ?
+    `;
+    const [rows] = await pool.execute(query, [deviceId, sTime, eTime, limit, offset]);
+    return rows as PictureExportRow[];
+};

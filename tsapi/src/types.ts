@@ -96,3 +96,21 @@ export interface CameraData {
     picture: string;
     time: string;
 }
+
+export type ExportStatus = "pending" | "running" | "ready" | "failed" | "expired";
+
+export interface ExportRecord {
+    id: string;
+    type: string;
+    status: ExportStatus;
+    params: unknown;
+    progress: number;
+    total_rows: number | null;
+    file_path: string | null;
+    file_size: number | null;
+    created_at: string;
+    updated_at: string;
+    completed_at: string | null;
+    expires_at: string | null;
+    error: string | null;
+}

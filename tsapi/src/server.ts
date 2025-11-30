@@ -9,6 +9,7 @@ import areaRoutes from "./routes/area";
 import userRoutes from "./routes/user";
 import dataRoutes from "./routes/data";
 import pictureRoutes from "./routes/picture";
+import exportRoutes from "./routes/export";
 
 import { backfillRange } from "./db/summary";
 import { backupDatabase } from "./db/backup";
@@ -66,6 +67,7 @@ app.use("/area", areaRoutes);
 app.use("/user", userRoutes);
 app.use("/data", dataRoutes);
 app.use("/picture", pictureRoutes);
+app.use("/exports", exportRoutes);
 
 // 서버 시작 + 인프라 초기화
 startInfra()

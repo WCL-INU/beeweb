@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { getPictureData, insertPictureData } from '../db/picture';
 import { PictureDataInsert } from '../types';
 
+// EXIF reader
 const ExifTool = require('node-exiftool');
 const exiftoolBin = require('dist-exiftool');
 const ep = new ExifTool.ExiftoolProcess(exiftoolBin);
@@ -14,21 +15,42 @@ const ep = new ExifTool.ExiftoolProcess(exiftoolBin);
 const router = express.Router();
 const upload = multer();
 const PICTURE_DIR = '/app/db/picture';
+const EXIF_TZ = process.env.EXIF_TZ || '+09:00'; // Asia/Seoul default
 
 router.use(express.json());
-
 ep.open();
 
-const extractExifTime = async (filePath: string): Promise<Date | null> => {
+const parseUploadTime = (raw: string): Date => {
+    let d = new Date(raw);
+    if (!Number.isNaN(d.getTime())) return d;
+    if (!raw.endsWith('Z')) {
+        d = new Date(`${raw}Z`);
+        if (!Number.isNaN(d.getTime())) return d;
+    }
+    throw new Error(`Invalid time value: ${raw}`);
+};
+
+const parseExifTime = (exifRaw: string): Date | null => {
+    // exifRaw example: "2025:11:30 09:00:00"
+    try {
+        const datePart = exifRaw.slice(0, 10).replace(/:/g, '-');
+        const timePart = exifRaw.slice(11);
+        const iso = `${datePart}T${timePart}${EXIF_TZ}`;
+        const d = new Date(iso);
+        if (!Number.isNaN(d.getTime())) return d;
+    } catch {
+        // ignore
+    }
+    return null;
+};
+
+const extractExifTime = async (filePath: string): Promise<string | null> => {
     try {
         const { data } = await ep.readMetadata(filePath);
         const meta = data[0] || {};
         const exifRaw = meta.DateTimeOriginal;
         if (typeof exifRaw === 'string') {
-            const datePart = exifRaw.slice(0, 10).replace(/:/g, '-');
-            const timePart = exifRaw.slice(11);
-            const parsed = `${datePart}T${timePart}+09:00`;
-            return new Date(parsed);
+            return exifRaw;
         }
     } catch (e) {
         console.warn('EXIF read failed:', e);
@@ -36,7 +58,7 @@ const extractExifTime = async (filePath: string): Promise<Date | null> => {
     return null;
 };
 
-const saveImage = async (deviceId: number, fallbackTime: string, buffer: Buffer): Promise<PictureDataInsert> => {
+const saveImage = async (deviceId: number, uploadTime: string | undefined, buffer: Buffer): Promise<PictureDataInsert> => {
     const deviceFolder = `device_${deviceId}`;
     const deviceDir = path.join(PICTURE_DIR, deviceFolder);
     await fs.mkdir(deviceDir, { recursive: true });
@@ -46,16 +68,19 @@ const saveImage = async (deviceId: number, fallbackTime: string, buffer: Buffer)
     const tempPath = path.join(deviceDir, tempFilename);
     await fs.writeFile(tempPath, buffer);
 
-    const exifTimeRaw = await extractExifTime(tempPath);
+    const exifRaw = await extractExifTime(tempPath);
 
     let timeObj: Date;
-    if (exifTimeRaw) {
-        timeObj = exifTimeRaw;
+    if (exifRaw) {
+        const exifParsed = parseExifTime(exifRaw);
+        if (!exifParsed) {
+            throw new Error(`Invalid EXIF time: ${exifRaw}`);
+        }
+        timeObj = exifParsed;
+    } else if (uploadTime) {
+        timeObj = parseUploadTime(uploadTime);
     } else {
-        const datePart = fallbackTime.slice(0, 10).replace(/:/g, '-');
-        const timePart = fallbackTime.slice(11);
-        const parsedDateStr = `${datePart}T${timePart}+09:00`;
-        timeObj = new Date(parsedDateStr);
+        throw new Error("Missing time and EXIF metadata");
     }
 
     const formatted = timeObj.toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
@@ -183,10 +208,14 @@ router.post('/upload', upload.any(), async (req: Request, res: Response) => {
                 res.status(400).send('Missing "data" array');
                 return;
             }
+            if (body.data.length === 0) {
+                res.status(400).send('Empty "data" array');
+                return;
+            }
 
             for (const item of body.data) {
                 const deviceId = item.device_id;
-                const time = item.time ?? new Date().toISOString();
+                const time = item.time as string | undefined;
                 const buffer = Buffer.from(item.picture, 'base64');
                 const meta = await saveImage(deviceId, time, buffer);
                 toInsert.push(meta);

@@ -85,3 +85,61 @@ export const getSensorData2 = async (
 
     return rows as SensorData2Row[];
 };
+
+export const countSensorData2Range = async (
+    deviceId: number,
+    sTime: string,
+    eTime: string,
+    dataTypes: number[]
+): Promise<number> => {
+    if (dataTypes.length === 0) return 0;
+    const placeholders = dataTypes.map(() => "?").join(", ");
+    const query = `
+        SELECT COUNT(*) as cnt
+        FROM sensor_data2
+        WHERE device_id = ?
+          AND data_type IN (${placeholders})
+          AND time BETWEEN ? AND ?
+    `;
+    const params = [deviceId, ...dataTypes, sTime, eTime];
+    const [rows] = await pool.execute(query, params);
+    const result = rows as { cnt: number }[];
+    return result[0]?.cnt ?? 0;
+};
+
+export const getSensorData2Batch = async (
+    deviceId: number,
+    sTime: string,
+    eTime: string,
+    dataTypes: number[],
+    limit: number,
+    offset: number
+): Promise<SensorData2Row[]> => {
+    if (dataTypes.length === 0) return [];
+    const placeholders = dataTypes.map(() => "?").join(", ");
+    const query = `
+        SELECT
+          s2.id,
+          s2.device_id,
+          d.name AS device_name,
+          d.hive_id,
+          h.name AS hive_name,
+          s2.data_type,
+          dt.name AS data_type_name,
+          s2.data_int,
+          s2.data_float,
+          DATE_FORMAT(CONVERT_TZ(s2.time, '+00:00', '+00:00'), '%Y-%m-%dT%H:%i:%sZ') as time
+        FROM sensor_data2 s2
+        JOIN devices d ON d.id = s2.device_id
+        LEFT JOIN hives h ON h.id = d.hive_id
+        LEFT JOIN data_types dt ON dt.id = s2.data_type
+        WHERE s2.device_id = ?
+          AND s2.data_type IN (${placeholders})
+          AND s2.time BETWEEN ? AND ?
+        ORDER BY s2.time ASC
+        LIMIT ? OFFSET ?
+    `;
+    const params = [deviceId, ...dataTypes, sTime, eTime, limit, offset];
+    const [rows] = await pool.execute(query, params);
+    return rows as SensorData2Row[];
+};

@@ -88,6 +88,24 @@ export const initializeDatabase = async () => {
       ('admin', 'A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=', 1)
       ON DUPLICATE KEY UPDATE pw = VALUES(pw), grade = VALUES(grade)`);
 
+    await pool.execute(`CREATE TABLE IF NOT EXISTS exports (
+      id VARCHAR(64) NOT NULL PRIMARY KEY,
+      type VARCHAR(64) NOT NULL,
+      status ENUM('pending','running','ready','failed','expired') NOT NULL,
+      params JSON,
+      progress INT DEFAULT 0,
+      total_rows INT,
+      file_path VARCHAR(512),
+      file_size BIGINT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      completed_at DATETIME,
+      expires_at DATETIME,
+      error TEXT,
+      INDEX idx_exports_status (status),
+      INDEX idx_exports_expires (expires_at)
+    )`);
+
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_device', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_data_type', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_data_type FOREIGN KEY (data_type) REFERENCES data_types(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('picture_data', 'fk_picture_device', `ALTER TABLE picture_data ADD CONSTRAINT fk_picture_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
