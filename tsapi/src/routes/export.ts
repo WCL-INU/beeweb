@@ -26,7 +26,7 @@ router.post("/data", async (req: Request, res: Response) => {
             content: {
                 "application/json": {
                     schema: {
-                        deviceId: 1,
+                        deviceIds: [1,2],
                         dataTypes: [2,3,4],
                         sTime: "2025-01-01T00:00:00Z",
                         eTime: "2025-01-02T00:00:00Z"
@@ -36,7 +36,7 @@ router.post("/data", async (req: Request, res: Response) => {
        }
      */
     try {
-        const deviceId = Number(req.body?.deviceId);
+        const deviceIdsRaw = req.body?.deviceIds ?? req.body?.deviceId;
         const sTimeRaw = req.body?.sTime as string;
         const eTimeRaw = req.body?.eTime as string;
         const dataTypesRaw = req.body?.dataTypes;
@@ -50,15 +50,24 @@ router.post("/data", async (req: Request, res: Response) => {
                   .filter((n) => Number.isFinite(n))
             : [];
 
-        if (!deviceId || !sTimeRaw || !eTimeRaw || dataTypes.length === 0) {
-            res.status(400).json({ error: "deviceId, dataTypes, sTime, eTime are required" });
+        const deviceIds: number[] = Array.isArray(deviceIdsRaw)
+            ? deviceIdsRaw.map(Number).filter((n) => Number.isFinite(n))
+            : typeof deviceIdsRaw === "string"
+            ? deviceIdsRaw
+                  .split(",")
+                  .map((s) => Number(s.trim()))
+                  .filter((n) => Number.isFinite(n))
+            : [];
+
+        if (deviceIds.length === 0 || !sTimeRaw || !eTimeRaw || dataTypes.length === 0) {
+            res.status(400).json({ error: "deviceIds (or deviceId), dataTypes, sTime, eTime are required" });
             return;
         }
 
         const sTime = ensureUtc("sTime", sTimeRaw);
         const eTime = ensureUtc("eTime", eTimeRaw);
 
-        const exportId = await createSensorExport({ deviceId, dataTypes, sTime, eTime });
+        const exportId = await createSensorExport({ deviceIds, dataTypes, sTime, eTime });
         res.status(202).json({ exportId });
     } catch (err) {
         console.error("[export] failed to create sensor export:", err);
@@ -75,7 +84,7 @@ router.post("/pictures", async (req: Request, res: Response) => {
             content: {
                 "application/json": {
                     schema: {
-                        deviceId: 1,
+                        deviceIds: [1,2],
                         sTime: "2025-01-01T00:00:00Z",
                         eTime: "2025-01-02T00:00:00Z"
                     }
@@ -84,19 +93,28 @@ router.post("/pictures", async (req: Request, res: Response) => {
        }
      */
     try {
-        const deviceId = Number(req.body?.deviceId);
+        const deviceIdsRaw = req.body?.deviceIds ?? req.body?.deviceId;
         const sTimeRaw = req.body?.sTime as string;
         const eTimeRaw = req.body?.eTime as string;
 
-        if (!deviceId || !sTimeRaw || !eTimeRaw) {
-            res.status(400).json({ error: "deviceId, sTime, eTime are required" });
+        const deviceIds: number[] = Array.isArray(deviceIdsRaw)
+            ? deviceIdsRaw.map(Number).filter((n) => Number.isFinite(n))
+            : typeof deviceIdsRaw === "string"
+            ? deviceIdsRaw
+                  .split(",")
+                  .map((s) => Number(s.trim()))
+                  .filter((n) => Number.isFinite(n))
+            : [];
+
+        if (deviceIds.length === 0 || !sTimeRaw || !eTimeRaw) {
+            res.status(400).json({ error: "deviceIds (or deviceId), sTime, eTime are required" });
             return;
         }
 
         const sTime = ensureUtc("sTime", sTimeRaw);
         const eTime = ensureUtc("eTime", eTimeRaw);
 
-        const exportId = await createPictureExport({ deviceId, sTime, eTime });
+        const exportId = await createPictureExport({ deviceIds, sTime, eTime });
         res.status(202).json({ exportId });
     } catch (err) {
         console.error("[export] failed to create picture export:", err);

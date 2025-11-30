@@ -62,61 +62,39 @@ export const insertSensorData2 = async (
 };
 
 
-export const getSensorData2 = async (
-    deviceId: number,
-    sTime: string,
-    eTime: string,
-    dataTypes: number[]
-): Promise<SensorData2Row[]> => {
-    if (dataTypes.length === 0) return [];
-
-    const placeholders = dataTypes.map(() => '?').join(', ');
-    const query = `
-        SELECT id, device_id, data_type, data_int, data_float, time
-        FROM sensor_data2
-        WHERE device_id = ?
-          AND data_type IN (${placeholders})
-          AND time BETWEEN ? AND ?
-        ORDER BY time DESC
-    `;
-    console.log(`Executing query: ${query} with params: [${deviceId}, ${dataTypes}, ${sTime}, ${eTime}]`);
-    const params = [deviceId, ...dataTypes, sTime, eTime];
-    const [rows] = await pool.execute(query, params);
-
-    return rows as SensorData2Row[];
-};
-
 export const countSensorData2Range = async (
-    deviceId: number,
+    deviceIds: number[],
     sTime: string,
     eTime: string,
     dataTypes: number[]
 ): Promise<number> => {
-    if (dataTypes.length === 0) return 0;
-    const placeholders = dataTypes.map(() => "?").join(", ");
+    if (dataTypes.length === 0 || deviceIds.length === 0) return 0;
+    const typePlaceholders = dataTypes.map(() => "?").join(", ");
+    const devicePlaceholders = deviceIds.map(() => "?").join(", ");
     const query = `
         SELECT COUNT(*) as cnt
         FROM sensor_data2
-        WHERE device_id = ?
-          AND data_type IN (${placeholders})
+        WHERE device_id IN (${devicePlaceholders})
+          AND data_type IN (${typePlaceholders})
           AND time BETWEEN ? AND ?
     `;
-    const params = [deviceId, ...dataTypes, sTime, eTime];
+    const params = [...deviceIds, ...dataTypes, sTime, eTime];
     const [rows] = await pool.execute(query, params);
     const result = rows as { cnt: number }[];
     return result[0]?.cnt ?? 0;
 };
 
 export const getSensorData2Batch = async (
-    deviceId: number,
+    deviceIds: number[],
     sTime: string,
     eTime: string,
     dataTypes: number[],
     limit: number,
     offset: number
 ): Promise<SensorData2Row[]> => {
-    if (dataTypes.length === 0) return [];
-    const placeholders = dataTypes.map(() => "?").join(", ");
+    if (dataTypes.length === 0 || deviceIds.length === 0) return [];
+    const typePlaceholders = dataTypes.map(() => "?").join(", ");
+    const devicePlaceholders = deviceIds.map(() => "?").join(", ");
     const query = `
         SELECT
           s2.id,
@@ -133,13 +111,35 @@ export const getSensorData2Batch = async (
         JOIN devices d ON d.id = s2.device_id
         LEFT JOIN hives h ON h.id = d.hive_id
         LEFT JOIN data_types dt ON dt.id = s2.data_type
-        WHERE s2.device_id = ?
-          AND s2.data_type IN (${placeholders})
+        WHERE s2.device_id IN (${devicePlaceholders})
+          AND s2.data_type IN (${typePlaceholders})
           AND s2.time BETWEEN ? AND ?
-        ORDER BY s2.time ASC
+        ORDER BY s2.device_id ASC, s2.time ASC
         LIMIT ? OFFSET ?
     `;
-    const params = [deviceId, ...dataTypes, sTime, eTime, limit, offset];
+    const params = [...deviceIds, ...dataTypes, sTime, eTime, limit, offset];
+    const [rows] = await pool.execute(query, params);
+    return rows as SensorData2Row[];
+};
+
+// Legacy single-device fetch (kept for existing routes)
+export const getSensorData2 = async (
+    deviceId: number,
+    sTime: string,
+    eTime: string,
+    dataTypes: number[]
+): Promise<SensorData2Row[]> => {
+    if (dataTypes.length === 0) return [];
+    const placeholders = dataTypes.map(() => "?").join(", ");
+    const query = `
+        SELECT id, device_id, data_type, data_int, data_float, time
+        FROM sensor_data2
+        WHERE device_id = ?
+          AND data_type IN (${placeholders})
+          AND time BETWEEN ? AND ?
+        ORDER BY time DESC
+    `;
+    const params = [deviceId, ...dataTypes, sTime, eTime];
     const [rows] = await pool.execute(query, params);
     return rows as SensorData2Row[];
 };

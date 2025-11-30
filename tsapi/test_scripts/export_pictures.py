@@ -3,10 +3,10 @@ Trigger picture export (CSV + images zipped twice) and download the outer ZIP.
 
 Defaults (override with env vars):
   EXPORT_BASE=http://localhost:8090
-  EXPORT_DEVICE_ID=1
+  EXPORT_DEVICE_IDS=1,2,3,4        # comma-separated for multiple devices
   EXPORT_S_TIME=<now-24h UTC>
   EXPORT_E_TIME=<now UTC>
-  EXPORT_OUT=picture_export.zip
+  EXPORT_OUT=picture_export_{deviceId}.zip
   EXPORT_TIMEOUT=60
 
 Endpoints used:
@@ -25,7 +25,6 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-
 import requests
 
 
@@ -36,8 +35,8 @@ def _default_time_range():
     return start.strftime(fmt), end.strftime(fmt)
 
 
-def create_export(base: str, device_id: int, s_time: str, e_time: str) -> str:
-    payload = {"deviceId": device_id, "sTime": s_time, "eTime": e_time}
+def create_export(base: str, device_ids: list[int], s_time: str, e_time: str) -> str:
+    payload = {"deviceIds": device_ids, "sTime": s_time, "eTime": e_time}
     resp = requests.post(f"{base}/exports/pictures", json=payload, timeout=10)
     resp.raise_for_status()
     data = resp.json()
@@ -81,7 +80,18 @@ def download_file(base: str, export_id: str, out_path: Path) -> None:
 
 def main():
     base = os.environ.get("EXPORT_BASE", "http://localhost:8090")
-    device_id = int(os.environ.get("EXPORT_DEVICE_ID", "1"))
+    device_ids_env = os.environ.get("EXPORT_DEVICE_IDS") or os.environ.get("EXPORT_DEVICE_ID", "1,2,3,4")
+    device_ids = []
+    for part in device_ids_env.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            device_ids.append(int(part))
+        except ValueError:
+            continue
+    if not device_ids:
+        raise RuntimeError("No valid device IDs provided")
     s_time_env = os.environ.get("EXPORT_S_TIME")
     e_time_env = os.environ.get("EXPORT_E_TIME")
     if s_time_env and e_time_env:
@@ -89,16 +99,16 @@ def main():
     else:
         s_time, e_time = _default_time_range()
 
-    out_file = Path(os.environ.get("EXPORT_OUT", "picture_export.zip"))
+    out_path = Path(os.environ.get("EXPORT_OUT", "picture_export.zip"))
     timeout_sec = int(os.environ.get("EXPORT_TIMEOUT", "60"))
 
-    print(f"Using base={base}, deviceId={device_id}, sTime={s_time}, eTime={e_time}, out={out_file}")
+    print(f"Using base={base}, deviceIds={device_ids}, sTime={s_time}, eTime={e_time}, out={out_path}")
 
-    export_id = create_export(base, device_id, s_time, e_time)
+    export_id = create_export(base, device_ids, s_time, e_time)
     status = poll_status(base, export_id, timeout_sec=timeout_sec)
     if status.get("status") != "ready":
         raise RuntimeError(f"Export did not complete: {status}")
-    download_file(base, export_id, out_file)
+    download_file(base, export_id, out_path)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import { SensorData2Row } from "../types";
 import { markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
 
 export interface SensorExportParams {
-    deviceId: number;
+    deviceIds: number[];
     dataTypes: number[];
     sTime: string; // inclusive
     eTime: string; // inclusive
@@ -66,13 +66,13 @@ export const exportSensorDataToCsv = async (
     );
 
     try {
-        const totalRows = await countSensorData2Range(params.deviceId, params.sTime, params.eTime, params.dataTypes);
+        const totalRows = await countSensorData2Range(params.deviceIds, params.sTime, params.eTime, params.dataTypes);
         await updateExportProgress(exportId, 0, totalRows);
 
         let offset = 0;
         while (true) {
             const rows: SensorData2Row[] = await getSensorData2Batch(
-                params.deviceId,
+                params.deviceIds,
                 params.sTime,
                 params.eTime,
                 params.dataTypes,

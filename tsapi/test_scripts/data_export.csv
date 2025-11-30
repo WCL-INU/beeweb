@@ -1,0 +1,71 @@
+id,hive_id,hive_name,device_id,device_name,data_type_name,data_type,time_utc,value
+30,1,Sample Hive,1,Sample Device,OUT,3,2025-11-30T07:16:23.000Z,6
+29,1,Sample Hive,1,Sample Device,IN,2,2025-11-30T07:16:23.000Z,9
+25,1,Sample Hive,1,Sample Device,TEMP,4,2025-11-30T07:16:23.000Z,22
+24,1,Sample Hive,1,Sample Device,OUT,3,2025-11-30T07:21:23.000Z,5
+23,1,Sample Hive,1,Sample Device,IN,2,2025-11-30T07:21:23.000Z,8
+19,1,Sample Hive,1,Sample Device,TEMP,4,2025-11-30T07:21:23.000Z,21.5
+18,1,Sample Hive,1,Sample Device,OUT,3,2025-11-30T07:26:23.000Z,4
+17,1,Sample Hive,1,Sample Device,IN,2,2025-11-30T07:26:23.000Z,7
+13,1,Sample Hive,1,Sample Device,TEMP,4,2025-11-30T07:26:23.000Z,21
+12,1,Sample Hive,1,Sample Device,OUT,3,2025-11-30T07:31:23.000Z,3
+11,1,Sample Hive,1,Sample Device,IN,2,2025-11-30T07:31:23.000Z,6
+7,1,Sample Hive,1,Sample Device,TEMP,4,2025-11-30T07:31:23.000Z,20.5
+1,1,Sample Hive,1,Sample Device,TEMP,4,2025-11-30T07:36:23.000Z,20
+6,1,Sample Hive,1,Sample Device,OUT,3,2025-11-30T07:36:23.000Z,2
+5,1,Sample Hive,1,Sample Device,IN,2,2025-11-30T07:36:23.000Z,5
+36,1,Sample Hive,2,SampleDevice_1_corr,OUT,3,2025-11-30T07:16:23.000Z,39.81800842285156
+31,1,Sample Hive,2,SampleDevice_1_corr,IN,2,2025-11-30T07:16:23.000Z,59.376625061035156
+32,1,Sample Hive,2,SampleDevice_1_corr,IN,2,2025-11-30T07:21:23.000Z,54.88175582885742
+37,1,Sample Hive,2,SampleDevice_1_corr,OUT,3,2025-11-30T07:21:23.000Z,35.791908264160156
+33,1,Sample Hive,2,SampleDevice_1_corr,IN,2,2025-11-30T07:26:23.000Z,50.15097427368164
+38,1,Sample Hive,2,SampleDevice_1_corr,OUT,3,2025-11-30T07:26:23.000Z,31.390718460083008
+39,1,Sample Hive,2,SampleDevice_1_corr,OUT,3,2025-11-30T07:31:23.000Z,26.537303924560547
+34,1,Sample Hive,2,SampleDevice_1_corr,IN,2,2025-11-30T07:31:23.000Z,45.158145904541016
+35,1,Sample Hive,2,SampleDevice_1_corr,IN,2,2025-11-30T07:36:23.000Z,39.872520446777344
+40,1,Sample Hive,2,SampleDevice_1_corr,OUT,3,2025-11-30T07:36:23.000Z,21.127973556518555
+70,1,Sample Hive,4,Sample Device 1,OUT,3,2025-11-30T16:11:21.000Z,6
+69,1,Sample Hive,4,Sample Device 1,IN,2,2025-11-30T16:11:21.000Z,9
+65,1,Sample Hive,4,Sample Device 1,TEMP,4,2025-11-30T16:11:21.000Z,22
+59,1,Sample Hive,4,Sample Device 1,TEMP,4,2025-11-30T16:16:21.000Z,21.5
+64,1,Sample Hive,4,Sample Device 1,OUT,3,2025-11-30T16:16:21.000Z,5
+63,1,Sample Hive,4,Sample Device 1,IN,2,2025-11-30T16:16:21.000Z,8
+53,1,Sample Hive,4,Sample Device 1,TEMP,4,2025-11-30T16:21:21.000Z,21
+57,1,Sample Hive,4,Sample Device 1,IN,2,2025-11-30T16:21:21.000Z,7
+58,1,Sample Hive,4,Sample Device 1,OUT,3,2025-11-30T16:21:21.000Z,4
+52,1,Sample Hive,4,Sample Device 1,OUT,3,2025-11-30T16:26:21.000Z,3
+47,1,Sample Hive,4,Sample Device 1,TEMP,4,2025-11-30T16:26:21.000Z,20.5
+51,1,Sample Hive,4,Sample Device 1,IN,2,2025-11-30T16:26:21.000Z,6
+46,1,Sample Hive,4,Sample Device 1,OUT,3,2025-11-30T16:31:21.000Z,2
+45,1,Sample Hive,4,Sample Device 1,IN,2,2025-11-30T16:31:21.000Z,5
+41,1,Sample Hive,4,Sample Device 1,TEMP,4,2025-11-30T16:31:21.000Z,20
+100,1,Sample Hive,5,Sample Device 2,OUT,3,2025-11-30T16:11:22.000Z,6
+99,1,Sample Hive,5,Sample Device 2,IN,2,2025-11-30T16:11:22.000Z,9
+95,1,Sample Hive,5,Sample Device 2,TEMP,4,2025-11-30T16:11:22.000Z,22
+94,1,Sample Hive,5,Sample Device 2,OUT,3,2025-11-30T16:16:22.000Z,5
+93,1,Sample Hive,5,Sample Device 2,IN,2,2025-11-30T16:16:22.000Z,8
+89,1,Sample Hive,5,Sample Device 2,TEMP,4,2025-11-30T16:16:22.000Z,21.5
+88,1,Sample Hive,5,Sample Device 2,OUT,3,2025-11-30T16:21:22.000Z,4
+83,1,Sample Hive,5,Sample Device 2,TEMP,4,2025-11-30T16:21:22.000Z,21
+87,1,Sample Hive,5,Sample Device 2,IN,2,2025-11-30T16:21:22.000Z,7
+77,1,Sample Hive,5,Sample Device 2,TEMP,4,2025-11-30T16:26:22.000Z,20.5
+82,1,Sample Hive,5,Sample Device 2,OUT,3,2025-11-30T16:26:22.000Z,3
+81,1,Sample Hive,5,Sample Device 2,IN,2,2025-11-30T16:26:22.000Z,6
+71,1,Sample Hive,5,Sample Device 2,TEMP,4,2025-11-30T16:31:22.000Z,20
+75,1,Sample Hive,5,Sample Device 2,IN,2,2025-11-30T16:31:22.000Z,5
+76,1,Sample Hive,5,Sample Device 2,OUT,3,2025-11-30T16:31:22.000Z,2
+129,1,Sample Hive,6,Sample Device 3,IN,2,2025-11-30T16:11:22.000Z,9
+125,1,Sample Hive,6,Sample Device 3,TEMP,4,2025-11-30T16:11:22.000Z,22
+130,1,Sample Hive,6,Sample Device 3,OUT,3,2025-11-30T16:11:22.000Z,6
+124,1,Sample Hive,6,Sample Device 3,OUT,3,2025-11-30T16:16:22.000Z,5
+123,1,Sample Hive,6,Sample Device 3,IN,2,2025-11-30T16:16:22.000Z,8
+119,1,Sample Hive,6,Sample Device 3,TEMP,4,2025-11-30T16:16:22.000Z,21.5
+118,1,Sample Hive,6,Sample Device 3,OUT,3,2025-11-30T16:21:22.000Z,4
+117,1,Sample Hive,6,Sample Device 3,IN,2,2025-11-30T16:21:22.000Z,7
+113,1,Sample Hive,6,Sample Device 3,TEMP,4,2025-11-30T16:21:22.000Z,21
+112,1,Sample Hive,6,Sample Device 3,OUT,3,2025-11-30T16:26:22.000Z,3
+111,1,Sample Hive,6,Sample Device 3,IN,2,2025-11-30T16:26:22.000Z,6
+107,1,Sample Hive,6,Sample Device 3,TEMP,4,2025-11-30T16:26:22.000Z,20.5
+106,1,Sample Hive,6,Sample Device 3,OUT,3,2025-11-30T16:31:22.000Z,2
+101,1,Sample Hive,6,Sample Device 3,TEMP,4,2025-11-30T16:31:22.000Z,20
+105,1,Sample Hive,6,Sample Device 3,IN,2,2025-11-30T16:31:22.000Z,5

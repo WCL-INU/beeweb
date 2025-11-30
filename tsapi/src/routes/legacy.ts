@@ -6,6 +6,7 @@ import pictureRoutes from './picture';
 import deviceRoutes from './device';
 import { getDeviceTypes } from '../db/device';
 import { getSensorData2 } from '../db/data';
+import { SensorData2Row } from '../types';
 
 const router = express.Router();
 // JSON 바디 파서는 legacy JSON 엔드포인트용
@@ -43,7 +44,7 @@ router.get('/inout', async (req: Request, res: Response) => {
         }
         const rows = await getSensorData2(deviceId, sTime, eTime, [2, 3]);
         const map = new Map<string, any>();
-        rows.forEach(row => {
+        rows.forEach((row: SensorData2Row) => {
             const key = `${row.device_id}-${row.time}`;
             const entry = map.get(key) || { device_id: row.device_id, time: row.time };
             if (row.data_type === 2) entry.in_field = Number(row.data_int ?? row.data_float ?? 0);
@@ -99,7 +100,7 @@ router.get('/sensor', async (req: Request, res: Response) => {
         }
         const rows = await getSensorData2(deviceId, sTime, eTime, [4, 5, 6, 7]);
         const map = new Map<string, any>();
-        rows.forEach(row => {
+        rows.forEach((row: SensorData2Row) => {
             const key = `${row.device_id}-${row.time}`;
             const entry = map.get(key) || { device_id: row.device_id, time: row.time };
             const value = Number(row.data_int ?? row.data_float ?? 0);

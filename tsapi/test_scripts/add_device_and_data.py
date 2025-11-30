@@ -6,7 +6,8 @@ Defaults (override with env vars):
   AREA_NAME=Sample Area
   AREA_LOC=37.123, 126.456
   HIVE_NAME=Sample Hive
-  DEVICE_NAME=Sample Device
+  DEVICE_NAME_PREFIX=Sample Device
+  DEVICE_COUNT=3
   DEVICE_TYPE_ID=2   # 1=CAMERA, 2=SENSOR, 3=INOUT (seeded in initialize)
   ROWS=5             # number of readings to upload
 
@@ -16,7 +17,7 @@ Run: python add_device_and_data.py
 
 import datetime as dt
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import requests
 
@@ -100,22 +101,28 @@ def main():
     area_name = os.environ.get("AREA_NAME", "Sample Area")
     area_loc = os.environ.get("AREA_LOC", "37.123, 126.456")
     hive_name = os.environ.get("HIVE_NAME", "Sample Hive")
-    device_name = os.environ.get("DEVICE_NAME", "Sample Device")
+    device_prefix = os.environ.get("DEVICE_NAME_PREFIX", "Sample Device")
+    device_count = int(os.environ.get("DEVICE_COUNT", "3"))
     device_type_id = int(os.environ.get("DEVICE_TYPE_ID", "2"))
     rows = int(os.environ.get("ROWS", "5"))
 
     area_id = create_area(area_name, area_loc)
     hive_id = create_hive(hive_name, area_id)
-    device_id = create_device(device_name, hive_id, device_type_id)
-    upload_sensor_data(device_id, rows)
+    device_ids: List[int] = []
+
+    for i in range(device_count):
+        name = f"{device_prefix} {i + 1}"
+        device_id = create_device(name, hive_id, device_type_id)
+        device_ids.append(device_id)
+        upload_sensor_data(device_id, rows)
 
     print("\nCreated resources:")
     print(f"  areaId:   {area_id}")
     print(f"  hiveId:   {hive_id}")
-    print(f"  deviceId: {device_id}")
-    print(f"Uploaded {rows} sensor rows.")
+    print(f"  deviceIds: {device_ids}")
+    print(f"Uploaded {rows} sensor rows per device.")
 
-    print("\nNext: run export script to download CSV for this device.")
+    print("\nNext: run export script to download CSV for these devices.")
 
 
 if __name__ == "__main__":

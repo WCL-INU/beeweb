@@ -72,12 +72,14 @@ export interface PictureExportRow extends PictureDataRow {
 }
 
 export const getPictureDataBatch = async (
-    deviceId: number,
+    deviceIds: number[],
     sTime: string,
     eTime: string,
     limit: number,
     offset: number
 ): Promise<PictureExportRow[]> => {
+    if (deviceIds.length === 0) return [];
+    const placeholders = deviceIds.map(() => "?").join(", ");
     const query = `
         SELECT
             p.id,
@@ -91,11 +93,11 @@ export const getPictureDataBatch = async (
         FROM picture_data p
         JOIN devices d ON d.id = p.device_id
         LEFT JOIN hives h ON h.id = d.hive_id
-        WHERE p.device_id = ?
+        WHERE p.device_id IN (${placeholders})
           AND p.time BETWEEN ? AND ?
-        ORDER BY p.time ASC
+        ORDER BY p.device_id ASC, p.time ASC
         LIMIT ? OFFSET ?
     `;
-    const [rows] = await pool.execute(query, [deviceId, sTime, eTime, limit, offset]);
+    const [rows] = await pool.execute(query, [...deviceIds, sTime, eTime, limit, offset]);
     return rows as PictureExportRow[];
 };

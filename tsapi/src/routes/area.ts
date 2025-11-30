@@ -68,6 +68,7 @@ router.post('/', async (req: Request, res: Response) => {
         if (existing) {
             // #swagger.responses[409] = { description: 'Area already exists' }
             res.status(409).json({ message: 'Area already exists', areaId });
+            return;
         }
         // #swagger.responses[201] = { description: 'Area added successfully' }
         res.status(201).json({ message: 'Area added successfully', areaId });

@@ -3,12 +3,12 @@ Trigger sensor data export and download the CSV.
 
 Defaults (override with env vars):
   EXPORT_BASE=http://localhost:8090
-  EXPORT_DEVICE_ID=1
-  EXPORT_DATA_TYPES=2,3,4        # IN/OUT/TEMP defaults; adjust as needed
-  EXPORT_S_TIME=<now-24h UTC>    # inclusive
-  EXPORT_E_TIME=<now UTC>        # inclusive
+  EXPORT_DEVICE_IDS=1,2,3,4,5,6,7,8   # comma-separated for multiple devices
+  EXPORT_DATA_TYPES=2,3,4             # IN/OUT/TEMP defaults; adjust as needed
+  EXPORT_S_TIME=<now-24h UTC>         # inclusive
+  EXPORT_E_TIME=<now UTC>             # inclusive
   EXPORT_OUT=data_export.csv
-  EXPORT_TIMEOUT=60              # seconds to wait for export
+  EXPORT_TIMEOUT=60                   # seconds to wait for export
 
 Requires:
   pip install requests
@@ -27,7 +27,7 @@ import requests
 # Request reference:
 # POST {EXPORT_BASE}/exports/data
 #   {
-#     "deviceId": <number>,
+#     "deviceIds": [<number>, ...],
 #     "dataTypes": [<number>, ...],
 #     "sTime": "YYYY-MM-DDTHH:MM:SSZ",
 #     "eTime": "YYYY-MM-DDTHH:MM:SSZ"
@@ -56,9 +56,9 @@ def _default_time_range():
     return start.strftime(fmt), end.strftime(fmt)
 
 
-def create_export(base: str, device_id: int, data_types: List[int], s_time: str, e_time: str) -> str:
+def create_export(base: str, device_ids: List[int], data_types: List[int], s_time: str, e_time: str) -> str:
     payload = {
-        "deviceId": device_id,
+        "deviceIds": device_ids,
         "dataTypes": data_types,
         "sTime": s_time,
         "eTime": e_time,
@@ -106,7 +106,18 @@ def download_file(base: str, export_id: str, out_path: Path) -> None:
 
 def main():
     base = os.environ.get("EXPORT_BASE", "http://localhost:8090")
-    device_id = int(os.environ.get("EXPORT_DEVICE_ID", "1"))
+    device_ids_env = os.environ.get("EXPORT_DEVICE_IDS") or os.environ.get("EXPORT_DEVICE_ID", "1,2,3,4,5,6,7,8")
+    device_ids: List[int] = []
+    for part in device_ids_env.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            device_ids.append(int(part))
+        except ValueError:
+            continue
+    if not device_ids:
+        raise RuntimeError("No valid device IDs provided")
     data_types = _parse_data_types(os.environ.get("EXPORT_DATA_TYPES"), [2, 3, 4])
 
     s_time_env = os.environ.get("EXPORT_S_TIME")
@@ -120,11 +131,11 @@ def main():
     timeout_sec = int(os.environ.get("EXPORT_TIMEOUT", "60"))
 
     print(
-        f"Using base={base}, deviceId={device_id}, dataTypes={data_types}, "
+        f"Using base={base}, deviceIds={device_ids}, dataTypes={data_types}, "
         f"sTime={s_time}, eTime={e_time}, out={out_file}, timeout={timeout_sec}s"
     )
 
-    export_id = create_export(base, device_id, data_types, s_time, e_time)
+    export_id = create_export(base, device_ids, data_types, s_time, e_time)
     status = poll_status(base, export_id, timeout_sec=timeout_sec)
     if status.get("status") != "ready":
         raise RuntimeError(f"Export did not complete: {status}")
