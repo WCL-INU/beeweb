@@ -12,6 +12,7 @@ import {
 import { EXPORT_DIR, EXPORT_MAX_CONCURRENCY, EXPORT_TTL_HOURS } from "./config";
 import { exportSensorDataToCsv, SensorExportParams } from "./sensor_data";
 import { exportPictures, PictureExportParams } from "./pictures";
+import { exportMixed, MixedExportParams } from "./mixed";
 import { randomUUID } from "crypto";
 
 type ExportTask = () => Promise<void>;
@@ -63,6 +64,15 @@ export const createPictureExport = async (params: PictureExportParams): Promise<
     return id;
 };
 
+export const createMixedExport = async (params: MixedExportParams): Promise<string> => {
+    await ensureExportDir();
+    const id = randomUUID();
+    const filePath = path.join(EXPORT_DIR, `${id}.zip`);
+    await createExportRecord(id, "mixed_zip", params, expiresAt(), filePath);
+    enqueue(() => exportMixed(id, filePath, params));
+    return id;
+};
+
 export const loadExport = async (id: string): Promise<ExportRecord | null> => {
     return getExportById(id);
 };
@@ -85,6 +95,10 @@ export const resumePendingExports = async (): Promise<void> => {
         } else if (record.type === "picture_zip" && record.file_path) {
             enqueue(() =>
                 exportPictures(record.id, record.file_path as string, (record.params ?? {}) as PictureExportParams)
+            );
+        } else if (record.type === "mixed_zip" && record.file_path) {
+            enqueue(() =>
+                exportMixed(record.id, record.file_path as string, (record.params ?? {}) as MixedExportParams)
             );
         }
     }

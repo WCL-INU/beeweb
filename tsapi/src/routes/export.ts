@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
-import { createSensorExport, createPictureExport, loadExport, removeExport, cleanupExpiredExports } from "../export/service";
+import { createSensorExport, createPictureExport, createMixedExport, loadExport, removeExport, cleanupExpiredExports } from "../export/service";
 
 const router = express.Router();
 router.use(express.json());
@@ -118,6 +118,67 @@ router.post("/pictures", async (req: Request, res: Response) => {
         res.status(202).json({ exportId });
     } catch (err) {
         console.error("[export] failed to create picture export:", err);
+        const message = err instanceof Error ? err.message : "Failed to create export";
+        res.status(500).json({ error: message });
+    }
+});
+
+// #swagger.tags = ['Export']
+// #swagger.description = 'Create mixed export (sensor CSV + picture CSV + images zip)'
+router.post("/mixed", async (req: Request, res: Response) => {
+    /* #swagger.requestBody = {
+            required: true,
+            content: {
+                "application/json": {
+                    schema: {
+                        deviceIds: [1,2],
+                        dataTypes: [1,2,3,4], // 1=PICTURE, 2~7=sensor
+                        sTime: "2025-01-01T00:00:00Z",
+                        eTime: "2025-01-02T00:00:00Z"
+                    }
+                }
+            }
+       }
+     */
+    try {
+        const deviceIdsRaw = req.body?.deviceIds ?? req.body?.deviceId;
+        const sTimeRaw = req.body?.sTime as string;
+        const eTimeRaw = req.body?.eTime as string;
+        const dataTypesRaw = req.body?.dataTypes;
+
+        const dataTypes: number[] = Array.isArray(dataTypesRaw)
+            ? dataTypesRaw.map(Number).filter((n) => Number.isFinite(n))
+            : typeof dataTypesRaw === "string"
+            ? dataTypesRaw
+                  .split(",")
+                  .map((s) => Number(s.trim()))
+                  .filter((n) => Number.isFinite(n))
+            : [];
+
+        const deviceIds: number[] = Array.isArray(deviceIdsRaw)
+            ? deviceIdsRaw.map(Number).filter((n) => Number.isFinite(n))
+            : typeof deviceIdsRaw === "string"
+            ? deviceIdsRaw
+                  .split(",")
+                  .map((s) => Number(s.trim()))
+                  .filter((n) => Number.isFinite(n))
+            : [];
+
+        const hasPicture = dataTypes.includes(1);
+        const hasSensor = dataTypes.some((t) => t !== 1);
+
+        if (deviceIds.length === 0 || !sTimeRaw || !eTimeRaw || (!hasPicture && !hasSensor)) {
+            res.status(400).json({ error: "deviceIds (or deviceId), dataTypes(1=picture,2~7=sensor), sTime, eTime are required" });
+            return;
+        }
+
+        const sTime = ensureUtc("sTime", sTimeRaw);
+        const eTime = ensureUtc("eTime", eTimeRaw);
+
+        const exportId = await createMixedExport({ deviceIds, dataTypes, sTime, eTime });
+        res.status(202).json({ exportId });
+    } catch (err) {
+        console.error("[export] failed to create mixed export:", err);
         const message = err instanceof Error ? err.message : "Failed to create export";
         res.status(500).json({ error: message });
     }

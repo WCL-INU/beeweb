@@ -1,11 +1,14 @@
 let fetcher_deviceList = [];
-let fetcher_tRange = {sTime: null, eTime: null};
+let fetcher_tRange = { sTime: null, eTime: null };
 let fetcher_dataList = [];
 
 async function fetchSensor2Data(deviceId, sTime, eTime, dataTypes, level) {
     const typeStr = Array.isArray(dataTypes) ? dataTypes.join(',') : String(dataTypes);
 
-    // ✅ 어떤 값이 들어와도 ISO(+Z)로 정규화
+    // 필수 값이 없으면 호출하지 않는다.
+    if (!deviceId || !sTime || !eTime) return [];
+
+    // ISO(+Z)로 맞춰 전달
     const sIso = new Date(sTime).toISOString();
     const eIso = new Date(eTime).toISOString();
 
@@ -15,7 +18,7 @@ async function fetchSensor2Data(deviceId, sTime, eTime, dataTypes, level) {
         sTime: sIso,
         eTime: eIso,
         dataTypes: typeStr,
-        level, // 요약을 먼저 검증하고 싶으면 '5m'로 고정
+        level: level || 'auto', // 기본값을 채워 undefined 전송 방지
     }).toString();
 
     const response = await fetch(url.href);
@@ -67,7 +70,7 @@ async function fetchDataList() {
                     time: d.time
                 }));
             
-            // 빈 데이터는 무시
+            // 값이 없는 경우 스킵
             if (!parsed.length) continue;
     
             const deviceMeta = {
@@ -98,13 +101,13 @@ document.addEventListener('deviceListUpdated', async (event) => {
 document.addEventListener('timeRangeUpdated', async (event) => {
     console.log(`[DataFetcher] Time range updated: ${event.detail.sTime} ~ ${event.detail.eTime}`);
     fetcher_tRange = event.detail;
-    if(fetcher_deviceList.length > 0) {
+    if (fetcher_deviceList.length > 0) {
         await fetchDataList();
     }
 });
 
 
-// ================== latestInfo의 이벤트 리스너 ==================
+// ================== latestInfo용 이벤트 리스너 ==================
 document.addEventListener('dataUpdated', (event) => {
     console.log('[DataFetcher] dataLoaded:', fetcher_dataList);
     const dataList = event.detail;
@@ -117,7 +120,7 @@ document.addEventListener('dataUpdated', (event) => {
     const latestCO2Data = getLatestData(dataList, 'CO2');
     const latestWeightData = getLatestData(dataList, 'Weight');
 
-    // I/O 데이터는 특별히 처리
+    // I/O 값은 별도 처리
     const ioValue = document.querySelector('#io-value');
     const ioTime = document.querySelector('#io-time');
     if (latestInData && latestOutData) {
@@ -140,7 +143,7 @@ function convertISOStringToLocalString(isoString) {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
-    }).replace(/\s/g, '');;
+    }).replace(/\s/g, '');
 
     const timeString = date.toLocaleTimeString('ko-KR', {
         timeZone: 'Asia/Seoul',
@@ -158,8 +161,8 @@ function getLatestData(dataList, type) {
     let latest = null;
 
     for (const item of filtered) {
-        if (!item.data || item.data.length === 0) continue; // 안전 가드
-        const latestEntry = item.data[0]; // 시간 내림차순으로 정렬되어 있다고 가정
+        if (!item.data || item.data.length === 0) continue;
+        const latestEntry = item.data[0];
         if (!latest || new Date(latestEntry.time) > new Date(latest.time)) {
             latest = latestEntry;
         }
