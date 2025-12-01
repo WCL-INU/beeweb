@@ -1,109 +1,394 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+
+:root {
+    --amber: #ff9f1c;
+    --amber-strong: #ff7a00;
+    --deep: #2f2419;
+    --sand: #fff8e9;
+    --line: #e6d9c4;
+    --muted: #7b6f61;
+    --surface: #ffffff;
+    --success: #1b9c85;
+    --danger: #c44536;
+    --info: #356ae6;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
     margin: 0;
-    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    font-family: 'Noto Sans KR', 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 222, 173, 0.25), transparent 35%),
+                radial-gradient(circle at 80% 0%, rgba(255, 215, 128, 0.2), transparent 30%),
+                #fffaf1;
+    color: var(--deep);
 }
 
-.header {
-    background-color: #fcefb4;
-    color: black;
-    text-align: left;
-    padding: 20px;
-    margin: -20px -20px 20px -20px; /* 헤더에만 여백을 없애고 상단 좌우 제거 */
-}
-
-.header,
-.footer {
-    background-color: #fcefb4;
-    color: #372b2b;
-    text-align: center;
-    padding: 10px 0;
-    font-family: Arial, sans-serif;
-}
-
-.container {
+.page {
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
+}
+
+.content {
+    width: min(1200px, 92vw);
+    margin: 0 auto;
+    padding: 28px 0 64px;
     flex: 1;
 }
 
-.container button {
-    padding: 10px 15px;
-    background-color: rgb(255, 151, 0);
-    color: white;
-    border: 2px solid #FF8C00;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
+.page-header h1 {
+    margin: 6px 0 8px;
+    font-size: 28px;
+    letter-spacing: -0.4px;
 }
 
-.container button:hover {
-    background-color: #e07b00;
+.page-header .lede {
+    margin: 2px 0;
+    color: var(--muted);
+    font-size: 14px;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
+.page-header .subtle {
+    color: #a39a8e;
+}
+
+.eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 2px;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px 16px;
+    box-shadow: 0 10px 30px rgba(47, 36, 25, 0.07);
     margin-top: 20px;
 }
 
-table,
-th,
-td {
-    border: 1px solid #372B2B;
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
-th,
-td {
-    padding: 12px;
-    text-align: left;
-    color: #372B2B;
+.section-title h2 {
+    margin: 0;
+    font-size: 20px;
 }
 
-tr:nth-child(even) {
-    background-color: #FFF8DC;
+.hint {
+    color: var(--muted);
+    font-size: 13px;
 }
 
-/* 선택 칸의 너비를 헤더 길이에 맞춤 */
-th.selectColumn {
-    width: 100px;
+.selection-grid,
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
 }
 
-/* 검색 및 저장 영역을 하나의 행으로 구성 */
-.search-save-container {
+.field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--deep);
+}
+
+select,
+input[type="datetime-local"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fffcf6;
+    font-size: 14px;
+    color: var(--deep);
+}
+
+select:disabled {
+    background: #f5f1e8;
+    color: #b3aa9f;
+}
+
+.device-list,
+.selected-list {
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    background: #fffdfa;
+    padding: 10px;
+    min-height: 120px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.device-list.empty,
+.selected-list.empty,
+.job-list.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.device-chip,
+.selected-chip {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--sand);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.device-chip .meta,
+.selected-chip .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 159, 28, 0.14);
+    color: var(--deep);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pill.secondary {
+    background: rgba(53, 106, 230, 0.1);
+    color: #1f3b94;
+}
+
+.pill.camera {
+    background: rgba(27, 156, 133, 0.12);
+    color: var(--success);
+}
+
+.pill.remove {
+    background: rgba(196, 69, 54, 0.12);
+    color: var(--danger);
+    cursor: pointer;
+    border: 1px solid rgba(196, 69, 54, 0.15);
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chip {
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fffdfa;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-weight: 600;
+}
+
+.chip input {
+    accent-color: var(--amber);
+}
+
+.chip:hover {
+    border-color: var(--amber);
+}
+
+.time-field .time-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.time-inputs span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+button.primary {
+    background: linear-gradient(135deg, var(--amber), var(--amber-strong));
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(255, 151, 0, 0.3);
+}
+
+button.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--deep);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.status.message {
+    min-height: 20px;
+    color: var(--danger);
+    font-size: 13px;
+}
+.status.message.success {
+    color: var(--success);
+}
+.status.message.info {
+    color: var(--muted);
+}
+
+.job-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.job-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #fffdf7;
+}
+
+.job-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    gap: 8px;
 }
 
-/* 검색 영역 스타일 */
-.search-container {
+.job-meta {
     display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.status-badge {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge.pending { background: rgba(255, 159, 28, 0.18); color: #9c5c00; }
+.status-badge.processing { background: rgba(53, 106, 230, 0.14); color: #1f3b94; }
+.status-badge.ready { background: rgba(27, 156, 133, 0.14); color: var(--success); }
+.status-badge.failed { background: rgba(196, 69, 54, 0.14); color: var(--danger); }
+.status-badge.expired { background: rgba(123, 111, 97, 0.12); color: var(--muted); }
+
+.job-body {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
     align-items: center;
 }
 
-/* 저장 버튼 스타일 */
-.action-buttons {
-    display: flex;
+.progress {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: #f2e7d7;
+    overflow: hidden;
 }
 
-/* 버튼과 입력 필드 간격 조절 */
-.search-container select,
-.search-container input,
-.search-container button {
-    margin-right: 10px;
+.progress .bar {
+    height: 100%;
+    background: linear-gradient(135deg, var(--amber), var(--amber-strong));
+    width: 0%;
+    transition: width 0.2s ease;
 }
 
-.time-selector {
+.download {
     display: flex;
-    justify-content: center;
     align-items: center;
-    padding: 1rem;
-    background: #f9f9f9;
+    gap: 10px;
+    flex-wrap: wrap;
 }
-.time-selector button {
-    margin: 0 0.5rem;
+
+.download a {
+    text-decoration: none;
+    color: var(--deep);
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.download a:hover {
+    border-color: var(--amber);
+}
+
+@media (max-width: 720px) {
+    .content {
+        width: 100%;
+        padding: 16px 18px 42px;
+    }
+    .selection-grid,
+    .filters-grid,
+    .job-body {
+        grid-template-columns: 1fr;
+    }
+    .device-list,
+    .selected-list {
+        grid-template-columns: 1fr;
+    }
 }

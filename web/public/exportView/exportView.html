@@ -2,85 +2,113 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>HIVE 데이터 내보내기</title>
-
-    <link rel="stylesheet" href="css/global-layout.css">
-    <link rel="stylesheet" href="exportView/css/styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Export | BeeWeb</title>
+    <link rel="stylesheet" href="/css/global-layout.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
+    <div class="page">
         <div id="global-header"></div>
 
-        <!-- 타이틀을 주황색 헤더로 두름 -->
-        <div class="header">
-            <h2>HIVE 데이터 내보내기</h2>
-        </div>
+        <main class="content">
+            <header class="page-header">
+                <p class="eyebrow">Export</p>
+                <h1>데이터 · 사진 혼합 Export</h1>
+                <p class="lede">Area → Hive → Device를 고르고, 원하는 데이터 타입과 기간을 지정해 ZIP 파일을 생성합니다.</p>
+                <p class="lede subtle">작업은 큐에서 처리되며 완료되면 다운로드 링크를 제공합니다. 만료 전까지 다시 방문해도 링크가 유지됩니다.</p>
+            </header>
 
-        <!-- 검색 및 저장 영역 -->
-        <div class="search-save-container">
-            <!-- 검색 영역 -->
-            <div class="search-container">
-                <select id="searchDropdown">
-                    <option value="id">HIVE ID</option>
-                    <option value="name">HIVE 이름</option>
-                    <option value="region">지역 이름</option>
-                </select>
-                <input type="text" id="searchQuery" placeholder="검색어 입력">
-                <button id="searchBtn">검색</button>
-            </div>
+            <section class="card selection">
+                <div class="section-title">
+                    <div>
+                        <p class="eyebrow">Step 1</p>
+                        <h2>대상 선택</h2>
+                    </div>
+                    <div class="hint">Area → Hive → Device 순서로 고른 뒤 디바이스를 추가하세요.</div>
+                </div>
 
-            <!-- 저장 버튼 -->
-            <div class="action-buttons">
-                <button id="saveBtn">저장</button>
-            </div>
-        </div>
+                <div class="selection-grid">
+                    <div class="field">
+                        <label for="areaSelect">Area</label>
+                        <select id="areaSelect">
+                            <option value="">Area 선택</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="hiveSelect">Hive</label>
+                        <select id="hiveSelect" disabled>
+                            <option value="">Hive 선택</option>
+                        </select>
+                    </div>
+                    <div class="field device-list-field">
+                        <label>Devices</label>
+                        <div id="deviceList" class="device-list empty">먼저 Hive를 선택하세요.</div>
+                    </div>
+                    <div class="field selected-field">
+                        <label>선택된 Devices</label>
+                        <div id="selectedDevices" class="selected-list empty">아직 선택된 디바이스가 없습니다.</div>
+                    </div>
+                </div>
+            </section>
 
-        <!-- time-selector -->
-        <div class="time-selector">
-            <button onclick="setPreset('day')">1일</button>
-            <button onclick="setPreset('week')">1주</button>
-            <button onclick="setPreset('month')">1달</button>
-            시작: <input type="datetime-local" id="startDate">
-            종료: <input type="datetime-local" id="endDate">
-        </div>
+            <section class="card filters">
+                <div class="section-title">
+                    <div>
+                        <p class="eyebrow">Step 2</p>
+                        <h2>추출 조건</h2>
+                    </div>
+                    <div class="hint">지원하지 않는 타입은 무시됩니다. 기간은 UTC 기준으로 전송됩니다.</div>
+                </div>
 
-        <!-- 테이블 영역 -->
-        <table id="hiveTable">
-            <thead>
-                <tr>
-                    <th class="selectColumn"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"> 전체 선택</th>
-                    <th>HIVE ID</th>
-                    <th>HIVE 이름</th>
-                    <th>지역 이름</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- 실제 데이터는 JavaScript를 통해 동적으로 삽입 -->
-                <!-- 예시 데이터 -->
-                <tr>
-                    <td><input type="checkbox" class="selectItem"></td>
-                    <td>1</td>
-                    <td>Hive A</td>
-                    <td>인천대</td>
-                </tr>
-                <tr>
-                    <td><input type="checkbox" class="selectItem"></td>
-                    <td>2</td>
-                    <td>Hive B</td>
-                    <td>안동대</td>
-                </tr>
-            </tbody>
-        </table>
+                <div class="filters-grid">
+                    <div class="field">
+                        <label>Data Types</label>
+                        <div id="dataTypeList" class="chips"></div>
+                    </div>
+                    <div class="field time-field">
+                        <label>기간</label>
+                        <div class="time-inputs">
+                            <div>
+                                <span>시작</span>
+                                <input type="datetime-local" id="startTime">
+                            </div>
+                            <div>
+                                <span>종료</span>
+                                <input type="datetime-local" id="endTime">
+                            </div>
+                        </div>
+                        <div class="presets">
+                            <button data-range="1d" class="ghost">최근 24시간</button>
+                            <button data-range="7d" class="ghost">최근 7일</button>
+                            <button data-range="30d" class="ghost">최근 30일</button>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <div id="statusMessage" class="status message"></div>
+                        <button id="exportBtn" class="primary">선택한 조건으로 Export</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card queue">
+                <div class="section-title">
+                    <div>
+                        <p class="eyebrow">Step 3</p>
+                        <h2>작업 큐 & 다운로드</h2>
+                    </div>
+                    <div class="hint">완료된 항목은 만료 전까지 계속 표시됩니다.</div>
+                </div>
+                <div id="jobList" class="job-list empty">
+                    아직 시작된 Export 작업이 없습니다.
+                </div>
+            </section>
+        </main>
+
+        <div id="global-footer"></div>
     </div>
 
-    <!-- footer -->
-    <div id="global-footer"></div>
-
-    <script src="scripts/global-layout.js"></script>
-    <script src="exportView/scripts/timeSelector.js"></script>
-    <script src="exportView/scripts/hive_list.js"></script>
-    <script src="exportView/scripts/export.js"></script>
+    <script src="/scripts/global-layout.js"></script>
+    <script src="scripts/export.js"></script>
 </body>
 </html>
