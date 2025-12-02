@@ -71,7 +71,11 @@
             const data = await res.json();
             state.areas = Array.isArray(data) ? data : [];
             renderAreaOptions();
+            if (!state.areas.length) {
+                setStatus('불러온 Area가 없습니다. API 응답을 확인하세요.');
+            }
         } catch (err) {
+            console.error('[export] area fetch failed:', err);
             setStatus(`Area 목록을 불러오지 못했습니다: ${err.message}`);
         }
     }
