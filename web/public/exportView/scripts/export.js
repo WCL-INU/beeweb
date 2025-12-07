@@ -1,14 +1,20 @@
 (() => {
+    // Ensure BASE_PATH is set even if global-layout.js didn't run (e.g., path rewriting)
+    if (!window.BASE_PATH) {
+        const segments = window.location.pathname.split('/').filter(Boolean);
+        window.BASE_PATH = segments.length ? `/${segments[0]}/` : '/';
+    }
+
     const DEFAULT_RANGE_DAYS = 7;
     const POLL_INTERVAL_MS = 3500;
     const DATA_TYPE_OPTIONS = [
-        { id: 1, label: 'Pictures', hint: '촬영 이미지 ZIP' },
-        { id: 2, label: 'In Count', hint: '입실 카운트' },
-        { id: 3, label: 'Out Count', hint: '퇴실 카운트' },
-        { id: 4, label: 'Temperature', hint: '온도' },
-        { id: 5, label: 'Humidity', hint: '습도' },
-        { id: 6, label: 'CO₂', hint: '이산화탄소' },
-        { id: 7, label: 'Weight', hint: '중량' },
+        { id: 1, label: 'Pictures'},
+        { id: 2, label: 'In Count'},
+        { id: 3, label: 'Out Count'},
+        { id: 4, label: 'Temperature'},
+        { id: 5, label: 'Humidity'},
+        { id: 6, label: 'CO₂'},
+        { id: 7, label: 'Weight'},
     ];
     const DEFAULT_DATA_TYPES = [2, 3, 4, 5, 6, 7];
 
@@ -98,7 +104,7 @@
             });
         } catch (err) {
             console.error('[export] failed to fetch jobs:', err);
-            setStatus(`Export �۾� ��� �ҷ����� ���߽��ϴ�: ${err.message}`);
+            setStatus(`Export 작업 목록을 불러오지 못했습니다. 새로고침 후 다시 시도하세요.`, 'info');
         }
     }
 
