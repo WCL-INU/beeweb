@@ -267,6 +267,12 @@ button.ghost {
     color: var(--deep);
 }
 
+button.danger {
+    color: var(--danger);
+    border-color: rgba(196, 69, 54, 0.35);
+    background: #fff7f5;
+}
+
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;

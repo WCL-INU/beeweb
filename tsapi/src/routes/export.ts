@@ -1,7 +1,15 @@
 import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
-import { createSensorExport, createPictureExport, createMixedExport, loadExport, removeExport, cleanupExpiredExports } from "../export/service";
+import {
+    createSensorExport,
+    createPictureExport,
+    createMixedExport,
+    loadExport,
+    removeExport,
+    cleanupExpiredExports,
+    listExports,
+} from "../export/service";
 
 const router = express.Router();
 router.use(express.json());
@@ -17,6 +25,33 @@ const ensureUtc = (label: string, value: unknown): string => {
     // Convert to MySQL DATETIME string in UTC
     return date.toISOString().replace("T", " ").replace("Z", "").slice(0, 19);
 };
+
+// #swagger.tags = ['Export']
+// #swagger.description = 'List export jobs (shared)'
+router.get("/", async (req: Request, res: Response) => {
+    try {
+        const limit = Number(req.query.limit);
+        const offset = Number(req.query.offset);
+        const records = await listExports(limit, offset);
+        const payload = records.map((record) => ({
+            id: record.id,
+            type: record.type,
+            status: record.status,
+            progress: record.progress,
+            totalRows: record.total_rows,
+            fileSize: record.file_size,
+            createdAt: record.created_at,
+            completedAt: record.completed_at,
+            expiresAt: record.expires_at,
+            params: record.params,
+            error: record.error,
+        }));
+        res.json(payload);
+    } catch (err) {
+        console.error("[export] failed to list exports:", err);
+        res.status(500).json({ error: "Failed to list exports" });
+    }
+});
 
 // #swagger.tags = ['Export']
 // #swagger.description = 'Create sensor_data2 CSV export'
@@ -195,6 +230,7 @@ router.get("/:id/status", async (req: Request, res: Response) => {
         }
         res.json({
             id: record.id,
+            type: record.type,
             status: record.status,
             progress: record.progress,
             totalRows: record.total_rows,
@@ -202,6 +238,7 @@ router.get("/:id/status", async (req: Request, res: Response) => {
             createdAt: record.created_at,
             completedAt: record.completed_at,
             expiresAt: record.expires_at,
+            params: record.params,
             error: record.error,
         });
     } catch (err) {

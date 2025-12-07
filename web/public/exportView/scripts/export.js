@@ -1,5 +1,4 @@
 (() => {
-    const STORAGE_KEY = 'beeweb-export-mixed-jobs';
     const DEFAULT_RANGE_DAYS = 7;
     const POLL_INTERVAL_MS = 3500;
     const DATA_TYPE_OPTIONS = [
@@ -29,10 +28,9 @@
         cacheElements();
         renderDataTypeChips();
         setDefaultTimeRange(DEFAULT_RANGE_DAYS);
-        loadStoredJobs();
+        fetchJobsFromServer();
         attachEvents();
         fetchAreas();
-        resumeJobPolling();
     });
 
     function cacheElements() {
@@ -62,6 +60,46 @@
         const base = (window.BASE_PATH || '/').replace(/\/$/, '');
         const normalized = path.startsWith('/') ? path : `/${path}`;
         return `${base}${normalized}`;
+    }
+
+    const normalizeJob = (raw) => {
+        const params = raw?.params && typeof raw.params === 'object' ? raw.params : {};
+        const deviceIds = raw?.deviceIds ?? params.deviceIds ?? [];
+        const dataTypes = raw?.dataTypes ?? params.dataTypes ?? [];
+        const sTime = raw?.sTime ?? params.sTime ?? null;
+        const eTime = raw?.eTime ?? params.eTime ?? null;
+
+        return {
+            ...raw,
+            deviceIds,
+            dataTypes,
+            sTime,
+            eTime,
+            createdAt: raw?.createdAt ?? raw?.created_at ?? null,
+            completedAt: raw?.completedAt ?? raw?.completed_at ?? null,
+            expiresAt: raw?.expiresAt ?? raw?.expires_at ?? null,
+        };
+    };
+
+    async function fetchJobsFromServer() {
+        try {
+            const res = await fetch(apiUrl('/api/exports'));
+            if (!res.ok) {
+                throw new Error(`(${res.status}) ${res.statusText}`);
+            }
+            const data = await res.json();
+            const jobs = Array.isArray(data) ? data.map(normalizeJob) : [];
+            state.jobs = jobs;
+            renderJobs();
+            jobs.forEach(job => {
+                if (!['ready', 'failed', 'expired'].includes(job.status)) {
+                    startPolling(job);
+                }
+            });
+        } catch (err) {
+            console.error('[export] failed to fetch jobs:', err);
+            setStatus(`Export �۾� ��� �ҷ����� ���߽��ϴ�: ${err.message}`);
+        }
     }
 
     async function fetchAreas() {
@@ -257,19 +295,9 @@
             input.value = opt.id;
             input.checked = DEFAULT_DATA_TYPES.includes(opt.id);
 
-            const text = document.createElement('div');
-            text.style.display = 'flex';
-            text.style.flexDirection = 'column';
-            text.style.gap = '2px';
-            const strong = document.createElement('span');
-            strong.textContent = opt.label;
-            strong.style.fontWeight = '700';
-            const hint = document.createElement('span');
-            hint.textContent = opt.hint;
-            hint.style.fontSize = '12px';
-            hint.style.color = '#7b6f61';
-            text.appendChild(strong);
-            text.appendChild(hint);
+            const text = document.createElement('span');
+            text.textContent = opt.label;
+            text.style.fontWeight = '700';
 
             label.appendChild(input);
             label.appendChild(text);
@@ -354,6 +382,7 @@
                 eTime: payload.eTime,
                 createdAt: new Date().toISOString(),
             });
+            hydrateJobFromServer(exportId);
             setStatus('작업 큐에 추가되었습니다. 진행 상황을 모니터링하세요.', 'success');
         } catch (err) {
             setStatus(`Export 생성 실패: ${err.message}`);
@@ -384,42 +413,25 @@
     }
 
     function addJob(job) {
-        state.jobs = [job, ...state.jobs];
-        saveJobs();
+        const normalized = normalizeJob(job);
+        state.jobs = [normalized, ...state.jobs];
         renderJobs();
-        startPolling(job);
+        startPolling(normalized);
     }
 
-    function loadStoredJobs() {
+    async function hydrateJobFromServer(jobId) {
         try {
-            const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            if (Array.isArray(stored)) {
-                state.jobs = stored;
-                renderJobs();
+            const res = await fetch(apiUrl(`/api/exports/${jobId}/status`));
+            if (!res.ok) {
+                throw new Error(`status ${res.status}`);
             }
+            const data = await res.json();
+            applyJobUpdate(jobId, normalizeJob({ id: jobId, ...data }));
         } catch (err) {
-            console.warn('Failed to parse stored jobs:', err);
+            console.warn(`[export] status fetch failed (${jobId}):`, err.message);
         }
     }
 
-    function saveJobs() {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state.jobs));
-        } catch (err) {
-            console.warn('Failed to store jobs:', err);
-        }
-    }
-
-    function resumeJobPolling() {
-        state.jobs.forEach(job => {
-            if (job.status === 'ready') {
-                // refresh once in case 만료되었는지 확인
-                refreshJobStatus(job, true);
-            } else if (job.status !== 'failed' && job.status !== 'expired') {
-                startPolling(job);
-            }
-        });
-    }
 
     function startPolling(job) {
         if (polling.has(job.id)) return;
@@ -442,13 +454,12 @@
                 throw new Error(`status ${res.status}`);
             }
             const data = await res.json();
-            const next = {
-                status: data.status || job.status,
-                progress: data.progress ?? job.progress,
-                totalRows: data.totalRows ?? job.totalRows,
-                fileSize: data.fileSize ?? job.fileSize,
+            const next = normalizeJob({
+                ...job,
+                ...data,
+                id: job.id,
                 expiresAt: data.expiresAt || data.expireAt || data.expiredAt || job.expiresAt,
-            };
+            });
             applyJobUpdate(job.id, next);
             if (['ready', 'failed', 'expired'].includes(next.status)) {
                 stopPolling(job.id);
@@ -468,9 +479,39 @@
     }
 
     function applyJobUpdate(jobId, patch) {
-        state.jobs = state.jobs.map(job => job.id === jobId ? { ...job, ...patch } : job);
-        saveJobs();
+        const normalized = normalizeJob({ id: jobId, ...patch });
+        const idx = state.jobs.findIndex(job => job.id === jobId);
+        if (idx >= 0) {
+            state.jobs = state.jobs.map(job => job.id === jobId ? { ...job, ...normalized } : job);
+        } else {
+            state.jobs = [normalized, ...state.jobs];
+        }
         renderJobs();
+    }
+
+    function removeJob(jobId) {
+        stopPolling(jobId);
+        state.jobs = state.jobs.filter(job => job.id !== jobId);
+        renderJobs();
+    }
+
+    async function handleDelete(jobId, btn) {
+        if (!jobId) return;
+        const confirmDelete = window.confirm('이 Export 작업을 삭제할까요? 파일도 함께 지워집니다.');
+        if (!confirmDelete) return;
+        if (btn) btn.disabled = true;
+        try {
+            const res = await fetch(apiUrl(`/api/exports/${jobId}`), { method: 'DELETE' });
+            if (res.status !== 404 && !res.ok) {
+                const text = await res.text();
+                throw new Error(text || res.statusText);
+            }
+            removeJob(jobId);
+            setStatus('삭제되었습니다.', 'success');
+        } catch (err) {
+            setStatus(`삭제 실패: ${err.message}`);
+            if (btn) btn.disabled = false;
+        }
     }
 
     function renderJobs() {
@@ -491,12 +532,25 @@
             const title = document.createElement('div');
             title.innerHTML = `<strong>Export ${job.id}</strong>`;
 
+            const headRight = document.createElement('div');
+            headRight.style.display = 'flex';
+            headRight.style.gap = '8px';
+            headRight.style.alignItems = 'center';
+
             const badge = document.createElement('span');
             badge.className = `status-badge ${job.status || 'pending'}`;
             badge.textContent = statusLabel(job.status);
 
+            const delBtn = document.createElement('button');
+            delBtn.className = 'ghost danger';
+            delBtn.textContent = '삭제';
+            delBtn.addEventListener('click', () => handleDelete(job.id, delBtn));
+
+            headRight.appendChild(badge);
+            headRight.appendChild(delBtn);
+
             head.appendChild(title);
-            head.appendChild(badge);
+            head.appendChild(headRight);
 
             const meta = document.createElement('div');
             meta.className = 'job-meta';

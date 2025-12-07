@@ -113,6 +113,20 @@ export const getExpiredExports = async (): Promise<ExportRecord[]> => {
     return rows.map(deserialize);
 };
 
+export const getExports = async (limit: number, offset: number): Promise<ExportRecord[]> => {
+    const safeLimit = Number.isFinite(limit) && limit > 0 && limit <= 500 ? Math.trunc(limit) : 100;
+    const safeOffset = Number.isFinite(offset) && offset >= 0 ? Math.trunc(offset) : 0;
+
+    const [rows] = await pool.execute<ExportRow[]>(
+        `SELECT * FROM exports
+         ORDER BY created_at DESC
+         LIMIT ?
+         OFFSET ?`,
+        [safeLimit, safeOffset]
+    );
+    return rows.map(deserialize);
+};
+
 export const deleteExportRecord = async (id: string): Promise<void> => {
     await pool.execute(`DELETE FROM exports WHERE id = ?`, [id]);
 };

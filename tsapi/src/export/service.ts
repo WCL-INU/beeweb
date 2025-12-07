@@ -5,6 +5,7 @@ import {
     createExportRecord,
     deleteExportRecord,
     getExportById,
+    getExports,
     getExpiredExports,
     getRestartableExports,
     markExportExpired,
@@ -116,4 +117,8 @@ export const cleanupExpiredExports = async (): Promise<void> => {
             console.error(`[export] failed to cleanup export ${record.id}:`, err);
         }
     }
+};
+
+export const listExports = async (limit = 100, offset = 0): Promise<ExportRecord[]> => {
+    return getExports(limit, offset);
 };
