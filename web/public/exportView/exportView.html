@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Export | BeeWeb</title>
     <link rel="stylesheet" href="../css/global-layout.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <!-- Ensure correct resolution even when served at /.../exportView (no trailing slash) -->
+    <link rel="stylesheet" href="./exportView/css/styles.css">
 </head>
 <body>
     <div class="page">
@@ -109,6 +110,6 @@
     </div>
 
     <script src="../scripts/global-layout.js"></script>
-    <script src="scripts/export.js"></script>
+    <script src="./exportView/scripts/export.js"></script>
 </body>
 </html>
