@@ -183,6 +183,27 @@
             return;
         }
         els.deviceList.classList.remove('empty');
+
+        const allSelected = devices.length > 0 && devices.every(d => state.selectedDevices.has(d.id));
+        const toolbar = document.createElement('div');
+        toolbar.style.display = 'flex';
+        toolbar.style.justifyContent = 'flex-end';
+        toolbar.style.marginBottom = '8px';
+        const toggleAll = document.createElement('button');
+        toggleAll.className = 'ghost';
+        toggleAll.textContent = allSelected ? '모두 해제' : '모두 선택';
+        toggleAll.addEventListener('click', () => {
+            if (allSelected) {
+                devices.forEach(d => state.selectedDevices.delete(d.id));
+            } else {
+                devices.forEach(d => state.selectedDevices.set(d.id, buildDevicePayload(d)));
+            }
+            renderSelectedDevices();
+            renderDeviceList(state.devices);
+        });
+        toolbar.appendChild(toggleAll);
+        els.deviceList.appendChild(toolbar);
+
         devices.forEach(device => {
             const item = document.createElement('label');
             item.className = 'device-chip';
@@ -222,20 +243,23 @@
 
     function toggleDeviceSelection(device, isChecked) {
         if (isChecked) {
-            const payload = {
-                id: device.id,
-                name: device.name,
-                type_id: device.type_id,
-                hive_id: state.selectedHive?.id,
-                hive_name: state.selectedHive?.name,
-                area_id: state.selectedArea?.id,
-                area_name: state.selectedArea?.name,
-            };
-            state.selectedDevices.set(device.id, payload);
+            state.selectedDevices.set(device.id, buildDevicePayload(device));
         } else {
             state.selectedDevices.delete(device.id);
         }
         renderSelectedDevices();
+    }
+
+    function buildDevicePayload(device) {
+        return {
+            id: device.id,
+            name: device.name,
+            type_id: device.type_id,
+            hive_id: state.selectedHive?.id,
+            hive_name: state.selectedHive?.name,
+            area_id: state.selectedArea?.id,
+            area_name: state.selectedArea?.name,
+        };
     }
 
     function renderSelectedDevices() {
