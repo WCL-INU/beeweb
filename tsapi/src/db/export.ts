@@ -18,6 +18,11 @@ interface ExportRow extends RowDataPacket {
     error: string | null;
 }
 
+interface ExportFileRefRow extends RowDataPacket {
+    id: string;
+    file_path: string | null;
+}
+
 const deserialize = (row: ExportRow): ExportRecord => ({
     id: row.id,
     type: row.type,
@@ -125,6 +130,13 @@ export const getExports = async (limit: number, offset: number): Promise<ExportR
         [safeLimit, safeOffset]
     );
     return rows.map(deserialize);
+};
+
+export const getExportFileRefs = async (): Promise<{ id: string; file_path: string | null }[]> => {
+    const [rows] = await pool.execute<ExportFileRefRow[]>(
+        `SELECT id, file_path FROM exports`
+    );
+    return rows.map((row) => ({ id: row.id, file_path: row.file_path }));
 };
 
 export const deleteExportRecord = async (id: string): Promise<void> => {

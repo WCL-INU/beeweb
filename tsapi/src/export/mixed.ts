@@ -6,7 +6,7 @@ import { EXPORT_BATCH_SIZE, PICTURE_DIR } from "./config";
 import { countSensorData2Range, getSensorData2Batch } from "../db/data";
 import { getPictureDataBatch } from "../db/picture";
 import { SensorData2Row } from "../types";
-import { markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
+import { deleteExportRecord, markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
 import { getDataTypesByIds, getDevicesByIds, getHivesByIds } from "../db/lookup";
 
 export interface MixedExportParams {
@@ -82,7 +82,25 @@ const toUtcIsoString = (value: string | Date): string => {
     throw new Error(`Invalid UTC date value: ${raw}`);
 };
 
-export const exportMixed = async (exportId: string, outZipPath: string, params: MixedExportParams): Promise<void> => {
+class ExportCanceledError extends Error {
+    constructor() {
+        super("Export canceled");
+        this.name = "ExportCanceledError";
+    }
+}
+
+const throwIfAborted = (signal?: AbortSignal) => {
+    if (signal?.aborted) {
+        throw new ExportCanceledError();
+    }
+};
+
+export const exportMixed = async (
+    exportId: string,
+    outZipPath: string,
+    params: MixedExportParams,
+    signal?: AbortSignal
+): Promise<void> => {
     await markExportRunning(exportId);
 
     const workDir = path.join(path.dirname(outZipPath), exportId);
@@ -94,6 +112,7 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
 
     try {
         await ensureDir(workDir);
+        throwIfAborted(signal);
         const devices = await getDevicesByIds(params.deviceIds);
         const deviceMap = new Map(devices.map((d) => [d.id, d]));
         const hiveIds = Array.from(
@@ -129,6 +148,7 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
 
             let cursor: { deviceId: number; time: string | Date; id: number } | undefined;
             while (true) {
+                throwIfAborted(signal);
                 const rows: SensorData2Row[] = await getSensorData2Batch(
                     params.deviceIds,
                     params.sTime,
@@ -188,6 +208,7 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
 
             let cursor: { deviceId: number; time: string | Date; id: number } | undefined;
             while (true) {
+                throwIfAborted(signal);
                 const batch = await getPictureDataBatch(
                     params.deviceIds,
                     params.sTime,
@@ -199,6 +220,7 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
 
                 let lines = "";
                 for (const row of batch) {
+                    throwIfAborted(signal);
                     const device = deviceMap.get(row.device_id);
                     const hiveId = device?.hive_id ?? null;
                     const hiveName = hiveId !== null ? hiveMap.get(hiveId)?.name ?? "" : "";
@@ -240,12 +262,17 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
         }
 
         // 3) ZIP 생성
+        throwIfAborted(signal);
         await zipDirectory(workDir, outZipPath);
         const stats = await fs.promises.stat(outZipPath);
         await markExportReady(exportId, stats.size);
     } catch (err) {
         await fs.promises.rm(outZipPath, { force: true }).catch(() => undefined);
         await fs.promises.rm(workDir, { recursive: true, force: true }).catch(() => undefined);
+        if (err instanceof ExportCanceledError) {
+            await deleteExportRecord(exportId);
+            return;
+        }
         await markExportFailed(exportId, err instanceof Error ? err.message : String(err));
         throw err;
     } finally {

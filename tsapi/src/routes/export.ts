@@ -6,8 +6,9 @@ import {
     createPictureExport,
     createMixedExport,
     loadExport,
-    removeExport,
+    cancelExport,
     cleanupExpiredExports,
+    cleanupOrphanExports,
     listExports,
 } from "../export/service";
 
@@ -275,15 +276,14 @@ router.get("/:id/download", async (req: Request, res: Response) => {
 });
 
 // #swagger.tags = ['Export']
-// #swagger.description = 'Delete export record and file'
+// #swagger.description = 'Cancel running export or delete completed export'
 router.delete("/:id", async (req: Request, res: Response) => {
     try {
-        const record = await loadExport(req.params.id);
-        if (!record) {
+        const ok = await cancelExport(req.params.id);
+        if (!ok) {
             res.status(404).json({ error: "Export not found" });
             return;
         }
-        await removeExport(record);
         res.json({ message: "Export removed" });
     } catch (err) {
         console.error("[export] failed to delete:", err);
@@ -297,6 +297,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 router.post("/cleanup", async (_req: Request, res: Response) => {
     try {
         await cleanupExpiredExports();
+        await cleanupOrphanExports();
         res.json({ message: "Cleanup started" });
     } catch (err) {
         console.error("[export] cleanup failed:", err);

@@ -4,7 +4,7 @@ import archiver from "archiver";
 import { once } from "events";
 import { EXPORT_BATCH_SIZE, PICTURE_DIR } from "./config";
 import { getPictureDataBatch } from "../db/picture";
-import { markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
+import { deleteExportRecord, markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
 import { getDevicesByIds, getHivesByIds } from "../db/lookup";
 
 export interface PictureExportParams {
@@ -51,6 +51,19 @@ const toUtcIsoString = (value: string | Date): string => {
     throw new Error(`Invalid UTC date value: ${raw}`);
 };
 
+class ExportCanceledError extends Error {
+    constructor() {
+        super("Export canceled");
+        this.name = "ExportCanceledError";
+    }
+}
+
+const throwIfAborted = (signal?: AbortSignal) => {
+    if (signal?.aborted) {
+        throw new ExportCanceledError();
+    }
+};
+
 const ensureDir = async (dir: string) => {
     await fs.promises.mkdir(dir, { recursive: true });
 };
@@ -73,10 +86,12 @@ const zipDirectory = async (sourceDir: string, outPath: string): Promise<void> =
 export const exportPictures = async (
     exportId: string,
     outerZipPath: string,
-    params: PictureExportParams
+    params: PictureExportParams,
+    signal?: AbortSignal
 ): Promise<void> => {
     await markExportRunning(exportId);
 
+    throwIfAborted(signal);
     const devices = await getDevicesByIds(params.deviceIds);
     const deviceMap = new Map(devices.map((d) => [d.id, d]));
     const hiveIds = Array.from(
@@ -98,6 +113,7 @@ export const exportPictures = async (
         let progress = 0;
         // For pictures, we don't have a cheap total count; we'll update progress as we go
         while (true) {
+            throwIfAborted(signal);
             const batch = await getPictureDataBatch(
                 params.deviceIds,
                 params.sTime,
@@ -109,6 +125,7 @@ export const exportPictures = async (
 
             let lines = "";
             for (const row of batch) {
+                throwIfAborted(signal);
                 const device = deviceMap.get(row.device_id);
                 const hiveId = device?.hive_id ?? null;
                 const hiveName = hiveId !== null ? hiveMap.get(hiveId)?.name ?? "" : "";
@@ -148,14 +165,19 @@ export const exportPictures = async (
         csvStream.end();
         await once(csvStream, "finish");
 
+        throwIfAborted(signal);
         await zipDirectory(workDir, outerZipPath);
 
         const stats = await fs.promises.stat(outerZipPath);
         await markExportReady(exportId, stats.size);
     } catch (err) {
         csvStream.destroy();
-        await fs.promises.rm(outerZipPath, { force: true });
-        await fs.promises.rm(workDir, { recursive: true, force: true });
+        await fs.promises.rm(outerZipPath, { force: true }).catch(() => undefined);
+        await fs.promises.rm(workDir, { recursive: true, force: true }).catch(() => undefined);
+        if (err instanceof ExportCanceledError) {
+            await deleteExportRecord(exportId);
+            return;
+        }
         await markExportFailed(exportId, err instanceof Error ? err.message : String(err));
         throw err;
     }

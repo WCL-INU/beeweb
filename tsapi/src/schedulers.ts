@@ -3,7 +3,7 @@ import { initializeDatabase } from "./db/initialize";
 import { drainSummaryOnce } from "./db/summary";
 import { backupDatabase } from "./db/backup";
 import { runCorrectProcess } from "./db/correct_sensor_data";
-import { cleanupExpiredExports, resumePendingExports } from "./export/service";
+import { cleanupExpiredExports, cleanupOrphanExports, resumePendingExports } from "./export/service";
 
 export type StopFn = () => void;
 
@@ -53,7 +53,9 @@ export async function startInfra(): Promise<StopFn> {
     await resumePendingExports();
 
     const exportCleanupTimer = setInterval(() => {
-        cleanupExpiredExports().catch((err) => console.error("[scheduler] export cleanup error:", err));
+        cleanupExpiredExports()
+            .then(() => cleanupOrphanExports())
+            .catch((err) => console.error("[scheduler] export cleanup error:", err));
     }, 60 * 60 * 1000);
     console.log("[scheduler] export cleanup started");
     stops.push(() => clearInterval(exportCleanupTimer));

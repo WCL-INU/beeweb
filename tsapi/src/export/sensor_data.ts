@@ -4,7 +4,7 @@ import path from "path";
 import { EXPORT_BATCH_SIZE } from "./config";
 import { countSensorData2Range, getSensorData2Batch } from "../db/data";
 import { SensorData2Row } from "../types";
-import { markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
+import { deleteExportRecord, markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
 import { getDataTypesByIds, getDevicesByIds, getHivesByIds } from "../db/lookup";
 
 export interface SensorExportParams {
@@ -13,6 +13,19 @@ export interface SensorExportParams {
     sTime: string; // inclusive
     eTime: string; // inclusive
 }
+
+class ExportCanceledError extends Error {
+    constructor() {
+        super("Export canceled");
+        this.name = "ExportCanceledError";
+    }
+}
+
+const throwIfAborted = (signal?: AbortSignal) => {
+    if (signal?.aborted) {
+        throw new ExportCanceledError();
+    }
+};
 
 const csvEscape = (value: unknown): string => {
     if (value === null || value === undefined) return "";
@@ -61,7 +74,8 @@ const toUtcIsoString = (value: string | Date): string => {
 export const exportSensorDataToCsv = async (
     exportId: string,
     filePath: string,
-    params: SensorExportParams
+    params: SensorExportParams,
+    signal?: AbortSignal
 ): Promise<void> => {
     await markExportRunning(exportId);
 
@@ -93,12 +107,14 @@ export const exportSensorDataToCsv = async (
     );
 
     try {
+        throwIfAborted(signal);
         const totalRows = await countSensorData2Range(params.deviceIds, params.sTime, params.eTime, params.dataTypes);
         await updateExportProgress(exportId, 0, totalRows);
 
         let exported = 0;
         let cursor: { deviceId: number; time: string | Date; id: number } | undefined;
         while (true) {
+            throwIfAborted(signal);
             const rows: SensorData2Row[] = await getSensorData2Batch(
                 params.deviceIds,
                 params.sTime,
@@ -143,11 +159,16 @@ export const exportSensorDataToCsv = async (
 
         stream.end();
         await once(stream, "finish");
+        throwIfAborted(signal);
         const stats = await fs.promises.stat(filePath);
         await markExportReady(exportId, stats.size);
     } catch (err) {
         stream.destroy();
-        await fs.promises.rm(filePath, { force: true });
+        await fs.promises.rm(filePath, { force: true }).catch(() => undefined);
+        if (err instanceof ExportCanceledError) {
+            await deleteExportRecord(exportId);
+            return;
+        }
         await markExportFailed(exportId, err instanceof Error ? err.message : String(err));
         throw err;
     }
