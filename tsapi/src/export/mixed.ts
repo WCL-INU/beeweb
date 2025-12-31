@@ -7,6 +7,7 @@ import { countSensorData2Range, getSensorData2Batch } from "../db/data";
 import { getPictureDataBatch } from "../db/picture";
 import { SensorData2Row } from "../types";
 import { markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
+import { getDataTypesByIds, getDevicesByIds, getHivesByIds } from "../db/lookup";
 
 export interface MixedExportParams {
     deviceIds: number[];
@@ -54,16 +55,31 @@ const valueFromRow = (row: SensorData2Row): number | string | null => {
     return null;
 };
 
-const toUtcIsoString = (utcString: string): string => {
-    // sensor_data2.time 컬럼은 UTC 문자열(yyyy-MM-ddTHH:mm:ssZ)을 기대
-    if (!utcString.endsWith("Z")) {
-        throw new Error("time must be a UTC string ending with 'Z'");
+const toUtcIsoString = (value: string | Date): string => {
+    if (value instanceof Date) return value.toISOString();
+    const raw = String(value);
+    if (raw.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(raw)) {
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
     }
-    const date = new Date(utcString);
-    if (Number.isNaN(date.getTime())) {
-        throw new Error(`Invalid UTC date value: ${utcString}`);
+    if (raw.includes("T")) {
+        const date = new Date(`${raw}Z`);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
     }
-    return date.toISOString();
+    if (raw.includes(" ")) {
+        const date = new Date(`${raw.replace(" ", "T")}Z`);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
+    }
+    throw new Error(`Invalid UTC date value: ${raw}`);
 };
 
 export const exportMixed = async (exportId: string, outZipPath: string, params: MixedExportParams): Promise<void> => {
@@ -78,6 +94,16 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
 
     try {
         await ensureDir(workDir);
+        const devices = await getDevicesByIds(params.deviceIds);
+        const deviceMap = new Map(devices.map((d) => [d.id, d]));
+        const hiveIds = Array.from(
+            new Set(devices.map((d) => d.hive_id).filter((id): id is number => id !== null && id !== undefined))
+        );
+        const hives = await getHivesByIds(hiveIds);
+        const hiveMap = new Map(hives.map((h) => [h.id, h]));
+        const dataTypes = sensorTypes.length ? await getDataTypesByIds(sensorTypes) : [];
+        const dataTypeMap = new Map(dataTypes.map((t) => [t.id, t]));
+
 
         // 1) 센서 CSV
         if (sensorTypes.length > 0) {
@@ -101,7 +127,7 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
             totalRows = total;
             await updateExportProgress(exportId, progress, totalRows);
 
-            let offset = 0;
+            let cursor: { deviceId: number; time: string | Date; id: number } | undefined;
             while (true) {
                 const rows: SensorData2Row[] = await getSensorData2Batch(
                     params.deviceIds,
@@ -109,27 +135,38 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
                     params.eTime,
                     sensorTypes,
                     EXPORT_BATCH_SIZE,
-                    offset
+                    cursor
                 );
                 if (rows.length === 0) break;
 
-                for (const row of rows) {
-                    sensorStream.write(
-                        toCsvLine([
+                const lines = rows
+                    .map((row) => {
+                        const device = deviceMap.get(row.device_id);
+                        const hiveId = device?.hive_id ?? null;
+                        const hiveName = hiveId !== null ? hiveMap.get(hiveId)?.name ?? "" : "";
+                        return toCsvLine([
                             row.id,
-                            (row as any).hive_id ?? "",
-                            (row as any).hive_name ?? "",
+                            hiveId ?? "",
+                            hiveName,
                             row.device_id,
-                            (row as any).device_name ?? "",
-                            (row as any).data_type_name ?? "",
+                            device?.name ?? "",
+                            dataTypeMap.get((row as any).data_type)?.name ?? "",
                             (row as any).data_type,
-                            toUtcIsoString(row.time as unknown as string),
+                            toUtcIsoString((row as any).time as unknown as string | Date),
                             valueFromRow(row),
-                        ])
-                    );
+                        ]);
+                    })
+                    .join("");
+                if (lines) {
+                    sensorStream.write(lines);
                 }
 
-                offset += rows.length;
+                const last = rows[rows.length - 1] as any;
+                cursor = {
+                    deviceId: last.device_id,
+                    time: last.time,
+                    id: last.id,
+                };
                 progress += rows.length;
                 await updateExportProgress(exportId, progress, totalRows);
             }
@@ -149,18 +186,22 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
                 toCsvLine(["id", "hive_id", "hive_name", "device_id", "device_name", "time_utc", "file_name", "relative_path"])
             );
 
-            let offset = 0;
+            let cursor: { deviceId: number; time: string | Date; id: number } | undefined;
             while (true) {
                 const batch = await getPictureDataBatch(
                     params.deviceIds,
                     params.sTime,
                     params.eTime,
                     EXPORT_BATCH_SIZE,
-                    offset
+                    cursor
                 );
                 if (batch.length === 0) break;
 
+                let lines = "";
                 for (const row of batch) {
+                    const device = deviceMap.get(row.device_id);
+                    const hiveId = device?.hive_id ?? null;
+                    const hiveName = hiveId !== null ? hiveMap.get(hiveId)?.name ?? "" : "";
                     const filename = path.basename(row.path);
                     const relativePath = path.join("images", row.path);
                     const src = path.join(PICTURE_DIR, row.path);
@@ -169,23 +210,29 @@ export const exportMixed = async (exportId: string, outZipPath: string, params: 
                     await fs.promises.mkdir(path.dirname(dst), { recursive: true });
                     await fs.promises.copyFile(src, dst);
 
-                    pictureStream.write(
-                        toCsvLine([
-                            row.id,
-                            row.hive_id ?? "",
-                            row.hive_name ?? "",
-                            row.device_id,
-                            row.device_name ?? "",
-                            row.time_utc,
-                            filename,
-                            relativePath,
-                        ])
-                    );
+                    lines += toCsvLine([
+                        row.id,
+                        hiveId ?? "",
+                        hiveName,
+                        row.device_id,
+                        device?.name ?? "",
+                        toUtcIsoString((row as any).time as unknown as string | Date),
+                        filename,
+                        relativePath,
+                    ]);
                     progress += 1;
-                    await updateExportProgress(exportId, progress, totalRows);
                 }
+                if (lines) {
+                    pictureStream.write(lines);
+                }
+                await updateExportProgress(exportId, progress, totalRows);
 
-                offset += batch.length;
+                const last = batch[batch.length - 1] as any;
+                cursor = {
+                    deviceId: last.device_id,
+                    time: last.time,
+                    id: last.id,
+                };
             }
 
             pictureStream.end();

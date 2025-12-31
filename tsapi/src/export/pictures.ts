@@ -5,6 +5,7 @@ import { once } from "events";
 import { EXPORT_BATCH_SIZE, PICTURE_DIR } from "./config";
 import { getPictureDataBatch } from "../db/picture";
 import { markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
+import { getDevicesByIds, getHivesByIds } from "../db/lookup";
 
 export interface PictureExportParams {
     deviceIds: number[];
@@ -22,6 +23,33 @@ const csvEscape = (value: unknown): string => {
 };
 
 const toCsvLine = (values: unknown[]): string => values.map(csvEscape).join(",") + "\n";
+
+const toUtcIsoString = (value: string | Date): string => {
+    if (value instanceof Date) return value.toISOString();
+    const raw = String(value);
+    if (raw.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(raw)) {
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
+    }
+    if (raw.includes("T")) {
+        const date = new Date(`${raw}Z`);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
+    }
+    if (raw.includes(" ")) {
+        const date = new Date(`${raw.replace(" ", "T")}Z`);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
+    }
+    throw new Error(`Invalid UTC date value: ${raw}`);
+};
 
 const ensureDir = async (dir: string) => {
     await fs.promises.mkdir(dir, { recursive: true });
@@ -49,6 +77,14 @@ export const exportPictures = async (
 ): Promise<void> => {
     await markExportRunning(exportId);
 
+    const devices = await getDevicesByIds(params.deviceIds);
+    const deviceMap = new Map(devices.map((d) => [d.id, d]));
+    const hiveIds = Array.from(
+        new Set(devices.map((d) => d.hive_id).filter((id): id is number => id !== null && id !== undefined))
+    );
+    const hives = await getHivesByIds(hiveIds);
+    const hiveMap = new Map(hives.map((h) => [h.id, h]));
+
     const workDir = path.join(path.dirname(outerZipPath), exportId);
     const imagesDir = path.join(workDir, "images");
     await ensureDir(imagesDir);
@@ -58,7 +94,7 @@ export const exportPictures = async (
     csvStream.write(toCsvLine(["id", "hive_id", "hive_name", "device_id", "device_name", "time_utc", "file_name", "relative_path"]));
 
     try {
-        let offset = 0;
+        let cursor: { deviceId: number; time: string | Date; id: number } | undefined;
         let progress = 0;
         // For pictures, we don't have a cheap total count; we'll update progress as we go
         while (true) {
@@ -67,11 +103,15 @@ export const exportPictures = async (
                 params.sTime,
                 params.eTime,
                 EXPORT_BATCH_SIZE,
-                offset
+                cursor
             );
             if (batch.length === 0) break;
 
+            let lines = "";
             for (const row of batch) {
+                const device = deviceMap.get(row.device_id);
+                const hiveId = device?.hive_id ?? null;
+                const hiveName = hiveId !== null ? hiveMap.get(hiveId)?.name ?? "" : "";
                 const filename = path.basename(row.path);
                 const relativePath = path.join("images", row.path);
                 const src = path.join(PICTURE_DIR, row.path);
@@ -80,22 +120,28 @@ export const exportPictures = async (
                 await fs.promises.mkdir(path.dirname(dst), { recursive: true });
                 await fs.promises.copyFile(src, dst);
 
-                csvStream.write(
-                    toCsvLine([
-                        row.id,
-                        row.hive_id ?? "",
-                        row.hive_name ?? "",
-                        row.device_id,
-                        row.device_name ?? "",
-                        row.time_utc,
-                        filename,
-                        relativePath,
-                    ])
-                );
+                lines += toCsvLine([
+                    row.id,
+                    hiveId ?? "",
+                    hiveName,
+                    row.device_id,
+                    device?.name ?? "",
+                    toUtcIsoString((row as any).time as unknown as string | Date),
+                    filename,
+                    relativePath,
+                ]);
                 progress += 1;
             }
+            if (lines) {
+                csvStream.write(lines);
+            }
 
-            offset += batch.length;
+            const last = batch[batch.length - 1] as any;
+            cursor = {
+                deviceId: last.device_id,
+                time: last.time,
+                id: last.id,
+            };
             await updateExportProgress(exportId, progress, null);
         }
 

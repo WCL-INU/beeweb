@@ -84,40 +84,58 @@ export const countSensorData2Range = async (
     return result[0]?.cnt ?? 0;
 };
 
+export interface SensorData2Cursor {
+    deviceId: number;
+    time: string | Date;
+    id: number;
+}
+
 export const getSensorData2Batch = async (
     deviceIds: number[],
     sTime: string,
     eTime: string,
     dataTypes: number[],
     limit: number,
-    offset: number
+    cursor?: SensorData2Cursor
 ): Promise<SensorData2Row[]> => {
     if (dataTypes.length === 0 || deviceIds.length === 0) return [];
     const typePlaceholders = dataTypes.map(() => "?").join(", ");
     const devicePlaceholders = deviceIds.map(() => "?").join(", ");
+    const cursorClause = cursor
+        ? `
+          AND (
+              s2.device_id > ?
+              OR (
+                  s2.device_id = ?
+                  AND (
+                      s2.time > ?
+                      OR (s2.time = ? AND s2.id > ?)
+                  )
+              )
+          )
+        `
+        : "";
     const query = `
         SELECT
           s2.id,
           s2.device_id,
-          d.name AS device_name,
-          d.hive_id,
-          h.name AS hive_name,
           s2.data_type,
-          dt.name AS data_type_name,
           s2.data_int,
           s2.data_float,
-          DATE_FORMAT(CONVERT_TZ(s2.time, '+00:00', '+00:00'), '%Y-%m-%dT%H:%i:%sZ') as time
+          s2.time
         FROM sensor_data2 s2
-        JOIN devices d ON d.id = s2.device_id
-        LEFT JOIN hives h ON h.id = d.hive_id
-        LEFT JOIN data_types dt ON dt.id = s2.data_type
         WHERE s2.device_id IN (${devicePlaceholders})
           AND s2.data_type IN (${typePlaceholders})
           AND s2.time BETWEEN ? AND ?
-        ORDER BY s2.device_id ASC, s2.time ASC
-        LIMIT ? OFFSET ?
+          ${cursorClause}
+        ORDER BY s2.device_id ASC, s2.time ASC, s2.id ASC
+        LIMIT ?
     `;
-    const params = [...deviceIds, ...dataTypes, sTime, eTime, limit, offset];
+    const params: (number | string | Date)[] = [...deviceIds, ...dataTypes, sTime, eTime];
+    if (cursor) {
+        params.push(cursor.deviceId, cursor.deviceId, cursor.time, cursor.time, cursor.id);
+    }
+    params.push(limit);
     const [rows] = await pool.execute(query, params);
     return rows as SensorData2Row[];
 };

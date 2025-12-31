@@ -5,6 +5,7 @@ import { EXPORT_BATCH_SIZE } from "./config";
 import { countSensorData2Range, getSensorData2Batch } from "../db/data";
 import { SensorData2Row } from "../types";
 import { markExportFailed, markExportReady, markExportRunning, updateExportProgress } from "../db/export";
+import { getDataTypesByIds, getDevicesByIds, getHivesByIds } from "../db/lookup";
 
 export interface SensorExportParams {
     deviceIds: number[];
@@ -30,15 +31,31 @@ const valueFromRow = (row: SensorData2Row): number | string | null => {
     return null;
 };
 
-const toUtcIsoString = (utcString: string): string => {
-    if (!utcString.endsWith("Z")) {
-        throw new Error("time must be a UTC string ending with 'Z'");
+const toUtcIsoString = (value: string | Date): string => {
+    if (value instanceof Date) return value.toISOString();
+    const raw = String(value);
+    if (raw.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(raw)) {
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
     }
-    const date = new Date(utcString);
-    if (Number.isNaN(date.getTime())) {
-        throw new Error(`Invalid UTC date value: ${utcString}`);
+    if (raw.includes("T")) {
+        const date = new Date(`${raw}Z`);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
     }
-    return date.toISOString();
+    if (raw.includes(" ")) {
+        const date = new Date(`${raw.replace(" ", "T")}Z`);
+        if (Number.isNaN(date.getTime())) {
+            throw new Error(`Invalid UTC date value: ${raw}`);
+        }
+        return date.toISOString();
+    }
+    throw new Error(`Invalid UTC date value: ${raw}`);
 };
 
 export const exportSensorDataToCsv = async (
@@ -47,6 +64,16 @@ export const exportSensorDataToCsv = async (
     params: SensorExportParams
 ): Promise<void> => {
     await markExportRunning(exportId);
+
+    const devices = await getDevicesByIds(params.deviceIds);
+    const deviceMap = new Map(devices.map((d) => [d.id, d]));
+    const hiveIds = Array.from(
+        new Set(devices.map((d) => d.hive_id).filter((id): id is number => id !== null && id !== undefined))
+    );
+    const hives = await getHivesByIds(hiveIds);
+    const hiveMap = new Map(hives.map((h) => [h.id, h]));
+    const dataTypes = await getDataTypesByIds(params.dataTypes);
+    const dataTypeMap = new Map(dataTypes.map((t) => [t.id, t]));
 
     const dir = path.dirname(filePath);
     await fs.promises.mkdir(dir, { recursive: true });
@@ -69,7 +96,8 @@ export const exportSensorDataToCsv = async (
         const totalRows = await countSensorData2Range(params.deviceIds, params.sTime, params.eTime, params.dataTypes);
         await updateExportProgress(exportId, 0, totalRows);
 
-        let offset = 0;
+        let exported = 0;
+        let cursor: { deviceId: number; time: string | Date; id: number } | undefined;
         while (true) {
             const rows: SensorData2Row[] = await getSensorData2Batch(
                 params.deviceIds,
@@ -77,28 +105,40 @@ export const exportSensorDataToCsv = async (
                 params.eTime,
                 params.dataTypes,
                 EXPORT_BATCH_SIZE,
-                offset
+                cursor
             );
             if (rows.length === 0) break;
 
-            for (const row of rows) {
-                stream.write(
-                    toCsvLine([
+            const lines = rows
+                .map((row) => {
+                    const device = deviceMap.get(row.device_id);
+                    const hiveId = device?.hive_id ?? null;
+                    const hiveName = hiveId !== null ? hiveMap.get(hiveId)?.name ?? "" : "";
+                    return toCsvLine([
                         row.id,
-                        (row as any).hive_id ?? "",
-                        (row as any).hive_name ?? "",
+                        hiveId ?? "",
+                        hiveName,
                         row.device_id,
-                        (row as any).device_name ?? "",
-                        (row as any).data_type_name ?? "",
+                        device?.name ?? "",
+                        dataTypeMap.get((row as any).data_type)?.name ?? "",
                         (row as any).data_type,
-                        toUtcIsoString(row.time as unknown as string),
+                        toUtcIsoString((row as any).time as unknown as string | Date),
                         valueFromRow(row),
-                    ])
-                );
+                    ]);
+                })
+                .join("");
+            if (lines) {
+                stream.write(lines);
             }
 
-            offset += rows.length;
-            await updateExportProgress(exportId, offset, totalRows);
+            const last = rows[rows.length - 1] as any;
+            cursor = {
+                deviceId: last.device_id,
+                time: last.time,
+                id: last.id,
+            };
+            exported += rows.length;
+            await updateExportProgress(exportId, exported, totalRows);
         }
 
         stream.end();

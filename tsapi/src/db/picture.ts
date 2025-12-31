@@ -64,11 +64,12 @@ export const getPictureData = async (
     return rows as PictureDataRow[];
 };
 
-export interface PictureExportRow extends PictureDataRow {
-    device_name: string | null;
-    hive_id: number | null;
-    hive_name: string | null;
-    time_utc: string;
+export interface PictureExportRow extends PictureDataRow {}
+
+export interface PictureDataCursor {
+    deviceId: number;
+    time: string | Date;
+    id: number;
 }
 
 export const getPictureDataBatch = async (
@@ -76,28 +77,42 @@ export const getPictureDataBatch = async (
     sTime: string,
     eTime: string,
     limit: number,
-    offset: number
+    cursor?: PictureDataCursor
 ): Promise<PictureExportRow[]> => {
     if (deviceIds.length === 0) return [];
     const placeholders = deviceIds.map(() => "?").join(", ");
+    const cursorClause = cursor
+        ? `
+          AND (
+              p.device_id > ?
+              OR (
+                  p.device_id = ?
+                  AND (
+                      p.time > ?
+                      OR (p.time = ? AND p.id > ?)
+                  )
+              )
+          )
+        `
+        : "";
     const query = `
         SELECT
             p.id,
             p.device_id,
-            d.name AS device_name,
-            d.hive_id,
-            h.name AS hive_name,
             p.time,
-            DATE_FORMAT(CONVERT_TZ(p.time, '+00:00', '+00:00'), '%Y-%m-%dT%H:%i:%sZ') as time_utc,
             p.path
         FROM picture_data p
-        JOIN devices d ON d.id = p.device_id
-        LEFT JOIN hives h ON h.id = d.hive_id
         WHERE p.device_id IN (${placeholders})
           AND p.time BETWEEN ? AND ?
-        ORDER BY p.device_id ASC, p.time ASC
-        LIMIT ? OFFSET ?
+          ${cursorClause}
+        ORDER BY p.device_id ASC, p.time ASC, p.id ASC
+        LIMIT ?
     `;
-    const [rows] = await pool.execute(query, [...deviceIds, sTime, eTime, limit, offset]);
+    const params: (number | string | Date)[] = [...deviceIds, sTime, eTime];
+    if (cursor) {
+        params.push(cursor.deviceId, cursor.deviceId, cursor.time, cursor.time, cursor.id);
+    }
+    params.push(limit);
+    const [rows] = await pool.execute(query, params);
     return rows as PictureExportRow[];
 };

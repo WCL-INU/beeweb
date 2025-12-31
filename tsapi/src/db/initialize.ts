@@ -12,6 +12,16 @@ async function addConstraintIfNotExists(table: string, constraintName: string, s
   }
 }
 
+async function addIndexIfNotExists(table: string, indexName: string, sql: string) {
+  const [rows] = await pool.query(
+    `SELECT INDEX_NAME FROM information_schema.STATISTICS WHERE TABLE_NAME = ? AND INDEX_NAME = ?`,
+    [table, indexName]
+  );
+  if ((rows as any[]).length === 0) {
+    await pool.execute(sql);
+  }
+}
+
 export const initializeDatabase = async () => {
   try {
     await pool.execute(`CREATE DATABASE IF NOT EXISTS hive_data`);
@@ -108,6 +118,8 @@ export const initializeDatabase = async () => {
 
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_device', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('sensor_data2', 'fk_sensor2_data_type', `ALTER TABLE sensor_data2 ADD CONSTRAINT fk_sensor2_data_type FOREIGN KEY (data_type) REFERENCES data_types(id) ON DELETE CASCADE`);
+    await addIndexIfNotExists('sensor_data2', 'ix_dev_time', `CREATE INDEX ix_dev_time ON sensor_data2 (device_id, time)`);
+    await addIndexIfNotExists('sensor_data2', 'ix_time_devtype', `CREATE INDEX ix_time_devtype ON sensor_data2 (time, device_id, data_type)`);
     await addConstraintIfNotExists('picture_data', 'fk_picture_device', `ALTER TABLE picture_data ADD CONSTRAINT fk_picture_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE`);
     await addConstraintIfNotExists('hives', 'fk_hives_area', `ALTER TABLE hives ADD CONSTRAINT fk_hives_area FOREIGN KEY (area_id) REFERENCES areas(id)`);
     await addConstraintIfNotExists('devices', 'fk_devices_hive', `ALTER TABLE devices ADD CONSTRAINT fk_devices_hive FOREIGN KEY (hive_id) REFERENCES hives(id)`);
