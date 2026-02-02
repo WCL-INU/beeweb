@@ -223,7 +223,8 @@ router.get("/:id/status", async (req: Request, res: Response) => {
     // #swagger.responses[200] = { description: 'Status', schema: { id: 1, status: 'running', progress: 0.4 } }
     // #swagger.responses[404] = { description: 'Not found' }
     try {
-        const record = await loadExport(req.params.id);
+        const exportId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+        const record = await loadExport(exportId);
         if (!record) {
             res.status(404).json({ error: "Export not found" });
             return;
@@ -252,7 +253,8 @@ router.get("/:id/download", async (req: Request, res: Response) => {
     // #swagger.description = 'Download ready CSV export'
     // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer' }
     try {
-        const record = await loadExport(req.params.id);
+        const exportId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+        const record = await loadExport(exportId);
         if (!record || record.status !== "ready" || !record.file_path) {
             res.status(404).json({ error: "Export not ready" });
             return;
@@ -282,7 +284,8 @@ router.delete("/:id", async (req: Request, res: Response) => {
     // #swagger.responses[200] = { description: 'Cancelled/Deleted' }
     // #swagger.responses[404] = { description: 'Not found' }
     try {
-        const ok = await cancelExport(req.params.id);
+        const exportId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+        const ok = await cancelExport(exportId);
         if (!ok) {
             res.status(404).json({ error: "Export not found" });
             return;
