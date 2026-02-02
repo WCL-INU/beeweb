@@ -148,38 +148,24 @@ router.get('/', async (req: Request, res: Response) => {
 router.post('/upload', upload.any(), async (req: Request, res: Response) => {
     // #swagger.tags = ['Picture']
     // #swagger.description = 'Upload one or more pictures (JSON or multipart/form-data)'
-    // #swagger.requestBody = {
-    //   content: {
-    //     "application/json": {
-    //       schema: {
-    //         type: "object",
-    //         properties: {
-    //           data: {
-    //             type: "array",
-    //             items: {
-    //               type: "object",
-    //               properties: {
-    //                 device_id: { type: "integer" },
-    //                 time: { type: "string", format: "date-time" },
-    //                 picture: { type: "string", format: "base64" }
-    //               }
-    //             }
-    //           }
-    //         }
-    //       }
-    //     },
-    //     "multipart/form-data": {
-    //       schema: {
-    //         type: "object",
-    //         properties: {
-    //           file1: { type: "string", format: "binary" },
-    //           file1_id: { type: "integer" },
-    //           file1_time: { type: "string", format: "date-time" }
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
+    /* #swagger.requestBody = {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/definitions/PictureUploadJson" }
+            },
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  file1: { type: "string", format: "binary" },
+                  file1_id: { type: "integer" },
+                  file1_time: { type: "string", format: "date-time" }
+                }
+              }
+            }
+          }
+       } */
     // #swagger.responses[201] = { description: 'Upload successful' }
     // #swagger.responses[400] = { description: 'Bad request' }
 

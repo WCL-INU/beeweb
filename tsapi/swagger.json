@@ -1,12 +1,46 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "1.0.0",
     "title": "REST API",
-    "description": ""
+    "description": "BeeWeb backend API (sensors, pictures, exports)",
+    "version": "1.0.0"
   },
-  "host": "localhost:3000",
+  "host": "localhost:8090",
   "basePath": "/",
+  "tags": [
+    {
+      "name": "Legacy",
+      "description": "Legacy-compatible endpoints"
+    },
+    {
+      "name": "Device",
+      "description": "Device CRUD"
+    },
+    {
+      "name": "Hive",
+      "description": "Hive CRUD"
+    },
+    {
+      "name": "Area",
+      "description": "Area CRUD"
+    },
+    {
+      "name": "User",
+      "description": "User authentication"
+    },
+    {
+      "name": "Sensor2",
+      "description": "Sensor data (new)"
+    },
+    {
+      "name": "Picture",
+      "description": "Picture upload & query"
+    },
+    {
+      "name": "Export",
+      "description": "Export jobs"
+    }
+  ],
   "schemes": [
     "http"
   ],
@@ -21,12 +55,42 @@
         }
       }
     },
+    "/summary": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/backup": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/correct": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/areahive": {
       "get": {
         "tags": [
           "Legacy"
         ],
-        "description": "Endpoint to fetch all area hives",
+        "description": "Fetch all area hives",
         "responses": {
           "200": {
             "description": "OK"
@@ -53,14 +117,14 @@
           },
           {
             "name": "sTime",
-            "description": "Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)",
+            "description": "Start time ISO8601",
             "required": true,
             "in": "query",
             "type": "string"
           },
           {
             "name": "eTime",
-            "description": "End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)",
+            "description": "End time ISO8601",
             "required": true,
             "in": "query",
             "type": "string"
@@ -84,7 +148,7 @@
         "tags": [
           "Legacy"
         ],
-        "description": "Login forwarding to user route",
+        "description": "Forward login to user route",
         "responses": {
           "default": {
             "description": ""
@@ -97,7 +161,7 @@
         "tags": [
           "Legacy"
         ],
-        "description": "Forward device types requests to device route",
+        "description": "Forward device types to device route",
         "responses": {
           "default": {
             "description": ""
@@ -121,14 +185,14 @@
           },
           {
             "name": "sTime",
-            "description": "Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)",
+            "description": "Start time ISO8601",
             "required": true,
             "in": "query",
             "type": "string"
           },
           {
             "name": "eTime",
-            "description": "End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)",
+            "description": "End time ISO8601",
             "required": true,
             "in": "query",
             "type": "string"
@@ -152,7 +216,7 @@
         "tags": [
           "Legacy"
         ],
-        "description": "Forward camera requests to data route",
+        "description": "Forward camera requests to picture route",
         "responses": {
           "default": {
             "description": ""
@@ -165,7 +229,7 @@
         "tags": [
           "Legacy"
         ],
-        "description": "Uplink adapter for legacy to sensor2 format",
+        "description": "Legacy uplink adapter for sensor data",
         "parameters": [
           {
             "name": "body",
@@ -174,6 +238,15 @@
               "type": "object",
               "properties": {
                 "id": {
+                  "example": "any"
+                },
+                "inField": {
+                  "example": "any"
+                },
+                "outField": {
+                  "example": "any"
+                },
+                "rest": {
                   "example": "any"
                 }
               }
@@ -195,8 +268,22 @@
         "tags": [
           "Legacy"
         ],
-        "description": "Upload adapter for legacy format to sensor2 format",
+        "description": "Legacy upload adapter: forward to sensor2 or picture upload",
         "parameters": [
+          {
+            "name": "type",
+            "description": "Device type ID",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "data",
+            "description": "Legacy data array or multipart fields",
+            "required": true,
+            "in": "query",
+            "type": "string"
+          },
           {
             "name": "body",
             "in": "body",
@@ -214,8 +301,11 @@
           }
         ],
         "responses": {
-          "default": {
-            "description": ""
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -798,6 +888,13 @@
             "required": true,
             "in": "query",
             "type": "string"
+          },
+          {
+            "name": "level",
+            "description": "raw | 5m | 30m | 2h | auto(default)",
+            "required": false,
+            "in": "query",
+            "type": "string"
           }
         ],
         "responses": {
@@ -934,6 +1031,511 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/picture/": {
+      "get": {
+        "tags": [
+          "Picture"
+        ],
+        "description": "Fetch pictures for a device within a time range",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "query",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "sTime",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "eTime",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/picture/upload": {
+      "post": {
+        "tags": [
+          "Picture"
+        ],
+        "description": "Upload one or more pictures (JSON or multipart/form-data)",
+        "responses": {
+          "201": {
+            "description": "Upload successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/PictureUploadJson"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file1": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "file1_id": {
+                    "type": "integer"
+                  },
+                  "file1_time": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/": {
+      "get": {
+        "tags": [
+          "Export"
+        ],
+        "description": "List export jobs (shared)",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Max rows"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Offset for paging"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Export list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "type": {
+                    "type": "string",
+                    "example": "sensor"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "queued"
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to list exports"
+          }
+        }
+      }
+    },
+    "/exports/data": {
+      "post": {
+        "tags": [
+          "Export"
+        ],
+        "description": "Create sensor_data2 CSV export",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "exportId": {
+                  "type": "number",
+                  "example": 123
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "500": {
+            "description": "Failed to create export"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/ExportSensorRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/pictures": {
+      "post": {
+        "tags": [
+          "Export"
+        ],
+        "description": "Create picture export (CSV + images zipped twice)",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "exportId": {
+                  "type": "number",
+                  "example": 234
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "500": {
+            "description": "Failed to create export"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/ExportPictureRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/mixed": {
+      "post": {
+        "tags": [
+          "Export"
+        ],
+        "description": "Create mixed export (sensor CSV + picture CSV + images zip)",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "exportId": {
+                  "type": "number",
+                  "example": 345
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "500": {
+            "description": "Failed to create export"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/ExportMixedRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/{id}/status": {
+      "get": {
+        "tags": [
+          "Export"
+        ],
+        "description": "Get export status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "status": {
+                  "type": "string",
+                  "example": "running"
+                },
+                "progress": {
+                  "type": "number",
+                  "example": 0.4
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/exports/{id}/download": {
+      "get": {
+        "tags": [
+          "Export"
+        ],
+        "description": "Download ready CSV export",
+        "produces": [
+          "text/csv"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/exports/{id}": {
+      "delete": {
+        "tags": [
+          "Export"
+        ],
+        "description": "Cancel running export or delete completed export",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled/Deleted"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/exports/cleanup": {
+      "post": {
+        "tags": [
+          "Export"
+        ],
+        "description": "Run cleanup for expired exports (optional)",
+        "responses": {
+          "200": {
+            "description": "Cleanup started"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ExportSensorRequest": {
+      "type": "object",
+      "properties": {
+        "deviceIds": {
+          "type": "array",
+          "example": [
+            1,
+            2
+          ],
+          "items": {
+            "type": "number"
+          }
+        },
+        "dataTypes": {
+          "type": "array",
+          "example": [
+            2,
+            3,
+            4
+          ],
+          "items": {
+            "type": "number"
+          }
+        },
+        "sTime": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "eTime": {
+          "type": "string",
+          "example": "2025-01-02T00:00:00Z"
+        }
+      }
+    },
+    "ExportPictureRequest": {
+      "type": "object",
+      "properties": {
+        "deviceIds": {
+          "type": "array",
+          "example": [
+            1,
+            2
+          ],
+          "items": {
+            "type": "number"
+          }
+        },
+        "sTime": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "eTime": {
+          "type": "string",
+          "example": "2025-01-02T00:00:00Z"
+        }
+      }
+    },
+    "ExportMixedRequest": {
+      "type": "object",
+      "properties": {
+        "deviceIds": {
+          "type": "array",
+          "example": [
+            1,
+            2
+          ],
+          "items": {
+            "type": "number"
+          }
+        },
+        "dataTypes": {
+          "type": "array",
+          "example": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "items": {
+            "type": "number"
+          }
+        },
+        "sTime": {
+          "type": "string",
+          "example": "2025-01-01T00:00:00Z"
+        },
+        "eTime": {
+          "type": "string",
+          "example": "2025-01-02T00:00:00Z"
+        }
+      }
+    },
+    "PictureUploadJson": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "device_id": {
+                "type": "number",
+                "example": 1
+              },
+              "time": {
+                "type": "string",
+                "example": "2025-11-30T09:00:00Z"
+              },
+              "picture": {
+                "type": "string",
+                "example": "<base64>"
+              }
+            }
           }
         }
       }

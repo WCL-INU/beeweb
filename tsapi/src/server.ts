@@ -20,15 +20,8 @@ import { startInfra } from "./schedulers"; // ✅ 스케줄러 관리
 const app = express();
 const PORT = 8090;
 
-// Swagger setup
-app.use("/docs", (_req: Request, res: Response) => {
-    try {
-        res.status(200).send(swaggerUi.generateHTML(swaggerDocument));
-    } catch (error) {
-        console.error("Error generating swagger:", error);
-        res.status(500).send("Internal Server Error");
-    }
-});
+// Swagger setup (serve static assets + UI together)
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // API endpoint
 app.get("/hello", (_req: Request, res: Response) => {

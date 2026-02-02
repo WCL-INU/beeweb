@@ -27,9 +27,13 @@ const ensureUtc = (label: string, value: unknown): string => {
     return date.toISOString().replace("T", " ").replace("Z", "").slice(0, 19);
 };
 
-// #swagger.tags = ['Export']
-// #swagger.description = 'List export jobs (shared)'
 router.get("/", async (req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'List export jobs (shared)'
+    // #swagger.parameters['limit'] = { in: 'query', required: false, type: 'integer', description: 'Max rows' }
+    // #swagger.parameters['offset'] = { in: 'query', required: false, type: 'integer', description: 'Offset for paging' }
+    // #swagger.responses[200] = { description: 'Export list', schema: [{ id: 1, type: 'sensor', status: 'queued' }] }
+    // #swagger.responses[500] = { description: 'Failed to list exports' }
     try {
         const limit = Number(req.query.limit);
         const offset = Number(req.query.offset);
@@ -54,23 +58,20 @@ router.get("/", async (req: Request, res: Response) => {
     }
 });
 
-// #swagger.tags = ['Export']
-// #swagger.description = 'Create sensor_data2 CSV export'
 router.post("/data", async (req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'Create sensor_data2 CSV export'
     /* #swagger.requestBody = {
             required: true,
             content: {
                 "application/json": {
-                    schema: {
-                        deviceIds: [1,2],
-                        dataTypes: [2,3,4],
-                        sTime: "2025-01-01T00:00:00Z",
-                        eTime: "2025-01-02T00:00:00Z"
-                    }
+                    schema: { $ref: "#/definitions/ExportSensorRequest" }
                 }
             }
-       }
-     */
+       } */
+    // #swagger.responses[202] = { description: 'Accepted', schema: { exportId: 123 } }
+    // #swagger.responses[400] = { description: 'Validation failed' }
+    // #swagger.responses[500] = { description: 'Failed to create export' }
     try {
         const deviceIdsRaw = req.body?.deviceIds ?? req.body?.deviceId;
         const sTimeRaw = req.body?.sTime as string;
@@ -112,22 +113,20 @@ router.post("/data", async (req: Request, res: Response) => {
     }
 });
 
-// #swagger.tags = ['Export']
-// #swagger.description = 'Create picture export (CSV + images zipped twice)'
 router.post("/pictures", async (req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'Create picture export (CSV + images zipped twice)'
     /* #swagger.requestBody = {
             required: true,
             content: {
                 "application/json": {
-                    schema: {
-                        deviceIds: [1,2],
-                        sTime: "2025-01-01T00:00:00Z",
-                        eTime: "2025-01-02T00:00:00Z"
-                    }
+                    schema: { $ref: "#/definitions/ExportPictureRequest" }
                 }
             }
-       }
-     */
+       } */
+    // #swagger.responses[202] = { description: 'Accepted', schema: { exportId: 234 } }
+    // #swagger.responses[400] = { description: 'Validation failed' }
+    // #swagger.responses[500] = { description: 'Failed to create export' }
     try {
         const deviceIdsRaw = req.body?.deviceIds ?? req.body?.deviceId;
         const sTimeRaw = req.body?.sTime as string;
@@ -159,23 +158,20 @@ router.post("/pictures", async (req: Request, res: Response) => {
     }
 });
 
-// #swagger.tags = ['Export']
-// #swagger.description = 'Create mixed export (sensor CSV + picture CSV + images zip)'
 router.post("/mixed", async (req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'Create mixed export (sensor CSV + picture CSV + images zip)'
     /* #swagger.requestBody = {
             required: true,
             content: {
                 "application/json": {
-                    schema: {
-                        deviceIds: [1,2],
-                        dataTypes: [1,2,3,4], // 1=PICTURE, 2~7=sensor
-                        sTime: "2025-01-01T00:00:00Z",
-                        eTime: "2025-01-02T00:00:00Z"
-                    }
+                    schema: { $ref: "#/definitions/ExportMixedRequest" }
                 }
             }
-       }
-     */
+       } */
+    // #swagger.responses[202] = { description: 'Accepted', schema: { exportId: 345 } }
+    // #swagger.responses[400] = { description: 'Validation failed' }
+    // #swagger.responses[500] = { description: 'Failed to create export' }
     try {
         const deviceIdsRaw = req.body?.deviceIds ?? req.body?.deviceId;
         const sTimeRaw = req.body?.sTime as string;
@@ -220,9 +216,12 @@ router.post("/mixed", async (req: Request, res: Response) => {
     }
 });
 
-// #swagger.tags = ['Export']
-// #swagger.description = 'Get export status'
 router.get("/:id/status", async (req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'Get export status'
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer' }
+    // #swagger.responses[200] = { description: 'Status', schema: { id: 1, status: 'running', progress: 0.4 } }
+    // #swagger.responses[404] = { description: 'Not found' }
     try {
         const record = await loadExport(req.params.id);
         if (!record) {
@@ -248,9 +247,10 @@ router.get("/:id/status", async (req: Request, res: Response) => {
     }
 });
 
-// #swagger.tags = ['Export']
-// #swagger.description = 'Download ready CSV export'
 router.get("/:id/download", async (req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'Download ready CSV export'
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer' }
     try {
         const record = await loadExport(req.params.id);
         if (!record || record.status !== "ready" || !record.file_path) {
@@ -275,9 +275,12 @@ router.get("/:id/download", async (req: Request, res: Response) => {
     }
 });
 
-// #swagger.tags = ['Export']
-// #swagger.description = 'Cancel running export or delete completed export'
 router.delete("/:id", async (req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'Cancel running export or delete completed export'
+    // #swagger.parameters['id'] = { in: 'path', required: true, type: 'integer' }
+    // #swagger.responses[200] = { description: 'Cancelled/Deleted' }
+    // #swagger.responses[404] = { description: 'Not found' }
     try {
         const ok = await cancelExport(req.params.id);
         if (!ok) {
@@ -292,9 +295,10 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 // Utility endpoint to trigger cleanup manually (optional)
-// #swagger.tags = ['Export']
-// #swagger.description = 'Run cleanup for expired exports (optional)'
 router.post("/cleanup", async (_req: Request, res: Response) => {
+    // #swagger.tags = ['Export']
+    // #swagger.description = 'Run cleanup for expired exports (optional)'
+    // #swagger.responses[200] = { description: 'Cleanup started' }
     try {
         await cleanupExpiredExports();
         await cleanupOrphanExports();
