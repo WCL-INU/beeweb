@@ -884,7 +884,7 @@
           },
           {
             "name": "dataTypes",
-            "description": "Comma-separated data types (e.g. 2,3,4)",
+            "description": "Comma-separated data types; 2=in_field, 3=out_field, 4=temp, 5=humi, 6=co2, 7=weigh (e.g. 2,3,4,6,7)",
             "required": true,
             "in": "query",
             "type": "string"
@@ -934,18 +934,38 @@
                 "values": {
                   "type": "object",
                   "properties": {
-                    "co2": {
+                    "in_field": {
                       "type": "number",
-                      "example": 450
+                      "example": 2
                     },
                     "out_field": {
                       "type": "number",
                       "example": 3
+                    },
+                    "temp": {
+                      "type": "number",
+                      "example": 24.3
+                    },
+                    "humi": {
+                      "type": "number",
+                      "example": 58.1
+                    },
+                    "co2": {
+                      "type": "number",
+                      "example": 450
+                    },
+                    "weigh": {
+                      "type": "number",
+                      "example": 12.34
                     }
                   },
                   "required": [
+                    "in_field",
+                    "out_field",
+                    "temp",
+                    "humi",
                     "co2",
-                    "out_field"
+                    "weigh"
                   ]
                 }
               },
@@ -998,6 +1018,14 @@
                       "values": {
                         "type": "object",
                         "properties": {
+                          "in_field": {
+                            "type": "number",
+                            "example": 1
+                          },
+                          "out_field": {
+                            "type": "number",
+                            "example": 0
+                          },
                           "temp": {
                             "type": "number",
                             "example": 25.5
@@ -1005,11 +1033,23 @@
                           "humi": {
                             "type": "number",
                             "example": 60
+                          },
+                          "co2": {
+                            "type": "number",
+                            "example": 430
+                          },
+                          "weigh": {
+                            "type": "number",
+                            "example": 11.27
                           }
                         },
                         "required": [
+                          "in_field",
+                          "out_field",
                           "temp",
-                          "humi"
+                          "humi",
+                          "co2",
+                          "weigh"
                         ]
                       }
                     },

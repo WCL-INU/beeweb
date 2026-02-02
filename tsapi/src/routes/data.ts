@@ -49,7 +49,7 @@ router.get('/sensor2', async (req: Request, res: Response) => {
   // #swagger.parameters['deviceId'] = { description: 'Device ID', required: true }
   // #swagger.parameters['sTime'] = { description: 'Start time (ISO 8601, e.g. 2025-05-04T14:13:00Z)', required: true }
   // #swagger.parameters['eTime'] = { description: 'End time (ISO 8601, e.g. 2025-05-11T14:13:00Z)', required: true }
-  // #swagger.parameters['dataTypes'] = { description: 'Comma-separated data types (e.g. 2,3,4)', required: true }
+  // #swagger.parameters['dataTypes'] = { description: 'Comma-separated data types; 2=in_field, 3=out_field, 4=temp, 5=humi, 6=co2, 7=weigh (e.g. 2,3,4,6,7)', required: true }
   // #swagger.parameters['level'] = { description: 'raw | 5m | 30m | 2h | auto(default)', required: false }
 
   try {
@@ -112,8 +112,12 @@ router.post('/uplink', async (req: Request, res: Response) => {
           schema: {
             $id: 1,
             values: {
+              $in_field: 2,
+              $out_field: 3,
+              $temp: 24.3,
+              $humi: 58.1,
               $co2: 450,
-              $out_field: 3
+              $weigh: 12.34
             }
           }
     } */
@@ -176,8 +180,12 @@ router.post('/upload', async (req: Request, res: Response) => {
                 $device_id: 1,
                 time: '2025-05-11T13:30:00Z',
                 values: {
+                  $in_field: 1,
+                  $out_field: 0,
                   $temp: 25.5,
-                  $humi: 60
+                  $humi: 60,
+                  $co2: 430,
+                  $weigh: 11.27
                 }
               }
             ]
